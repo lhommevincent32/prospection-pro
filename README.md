@@ -30,7 +30,7 @@ Les collecteurs ne savent pas lequel des deux ils alimentent : voir `src/store/`
 
 1. **Supabase** — créer un projet, coller `supabase/schema.sql` dans l'éditeur SQL,
    puis désactiver l'inscription publique une fois son propre compte créé.
-2. **GitHub** — déposer le dépôt en privé, puis dans *Settings > Secrets and
+2. **GitHub** — déposer le dépôt, puis dans *Settings > Secrets and
    variables > Actions* :
    - onglet **Secrets** : `INSEE_API_KEY`, `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`
    - onglet **Variables** : `SUPABASE_URL`, `SUPABASE_ANON_KEY`
@@ -42,6 +42,20 @@ Dès lors, `collecte.yml` tourne chaque matin et `pages.yml` publie le tableau d
 La clé de service (`SUPABASE_SERVICE_KEY`) contourne toutes les règles d'accès : elle
 ne doit vivre que dans `.env` et dans les secrets GitHub. La clé « anon », elle, est
 faite pour être publique — elle n'ouvre rien sans connexion.
+
+### Le dépôt doit être public, et c'est sans risque
+
+GitHub Pages ne publie pas les dépôts privés sur un compte gratuit. Or ce dépôt ne
+contient **aucune donnée de prospection et aucune clé** : les fiches vivent dans
+Supabase, les clés dans les secrets. Ce qui serait visible, c'est le code, la liste
+des 125 communes et la grille de score — rien de confidentiel.
+
+L'adresse du tableau de bord serait publique, mais la page n'affiche rien sans
+connexion, et l'inscription est désactivée : personne d'autre ne peut créer de compte.
+
+Si tu préfères malgré tout un dépôt privé, **Cloudflare Pages** ou **Netlify** le
+publient gratuitement. La collecte, elle, fonctionne dans les deux cas — GitHub
+Actions tourne aussi sur les dépôts privés.
 
 ## Ce que fait la collecte
 
