@@ -1,0 +1,13 @@
+{
+  "name": "prospection-pro",
+  "version": "1.0.0",
+  "description": "Veille des créations d'entreprises et des événements locaux sur le secteur Nord-Gers",
+  "type": "module",
+  "private": true,
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "collecte": "node --env-file=.env src/collect.js",
+    "digest": "node --env-file=.env src/digest.js",
+    "start": "node --env-file=.env src/server.js"
+  }
+}

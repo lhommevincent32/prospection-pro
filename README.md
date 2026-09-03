@@ -1,0 +1,74 @@
+# Veille prospection — Nord-Gers
+
+Détecte chaque semaine les entreprises qui se créent ou qui bougent sur le secteur,
+ainsi que les événements locaux à venir, et les classe par potentiel commercial.
+
+Aucune dépendance à installer : tout tourne avec Node 22 ou plus récent.
+
+## Les trois commandes
+
+```bash
+npm run collecte    # interroge les sources et remplit la base
+npm run digest      # écrit le récapitulatif dans data/digest.html
+npm start           # ouvre le tableau de bord sur http://localhost:4321
+```
+
+`npm run collecte 90` élargit la fenêtre à 90 jours si besoin (45 par défaut).
+
+## Ce que fait la collecte
+
+| Source | Ce qu'elle apporte | Clé |
+|---|---|---|
+| **Sirene** (INSEE) | Toutes les créations, entrepreneurs individuels compris | `INSEE_API_KEY` dans `.env` |
+| **BODACC** | Reprises de fonds, déménagements, changements de dirigeant | aucune |
+| **La Dépêche** | Fêtes, foires et ouvertures à venir → prospects flyers | aucune |
+
+Un quatrième passage complète les fiches BODACC avec leur code d'activité, récupéré
+chez Sirene à partir du SIREN — sans lui, une reprise de boulangerie et une reprise de
+cabinet comptable auraient la même note.
+
+## Le périmètre
+
+125 communes du nord du Gers, définies dans `data/zone.json` : limite départementale au
+nord et à l'ouest, Lectoure et Saint-Clar à l'est, ligne Fleurance — Montestruc —
+Vic-Fezensac au sud. Nogaro, Auch et Sainte-Christie sont exclues.
+
+Le filtrage se fait sur le **nom de commune**, pas sur le code postal : 57 communes hors
+secteur partagent un code postal avec le nôtre, dont précisément celles qui sont exclues.
+
+## Le score
+
+De 0 à 100, il ne sert qu'à donner un ordre de lecture. Il combine le type d'activité
+(code NAF), le type d'événement, le fait d'être employeur, le capital et la taille de la
+commune. Chaque fiche affiche les raisons de sa note — si un critère te semble faux,
+il se change dans `src/score.js`, en haut du fichier.
+
+Les reprises de fonds de commerce sont volontairement mieux notées que les créations :
+le repreneur remet tous ses contrats à plat, alors qu'une entreprise qui démarre n'a
+encore aucun volume.
+
+## Deux points à ne pas déplacer
+
+**Le filtre de diffusion.** 28 % des créations du secteur émanent d'entrepreneurs ayant
+exercé leur droit d'opposition à la diffusion de leurs données. Le filtre
+`statutDiffusionEtablissement:O` est posé dans la requête Sirene elle-même, pas dans un
+tri après coup, pour que ces fiches n'entrent jamais dans la base.
+
+**La fenêtre de 45 jours.** Sirene publie avec un décalage important : un mois écoulé
+n'affiche d'abord qu'un tiers de ses créations et se remplit ensuite. Ne pas réduire
+cette fenêtre à 7 jours, sinon les créations publiées en retard sont perdues
+définitivement. Le dédoublonnage fait que seules les fiches réellement nouvelles
+remontent.
+
+## RGPD
+
+La plupart des fiches concernent des entreprises individuelles : ce sont des personnes
+physiques, avec parfois leur adresse personnelle.
+
+- Le bouton **Oublier** supprime définitivement une fiche, à utiliser dès qu'une
+  personne demande à ne plus être démarchée.
+- La collecte purge automatiquement les fiches de plus d'un an jamais travaillées.
+- La clé INSEE vit dans `.env`, qui n'est pas suivi par git.
+
+Avant une mise en service régulière, valider l'usage avec le manager ou le
+correspondant conformité : cet outil constitue un fichier de prospection à côté du CRM.

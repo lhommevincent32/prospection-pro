@@ -1,0 +1,540 @@
+<title>Détection Nord-Gers</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+:root{
+  --ink:#141C26;
+  --ink-2:#3A4759;
+  --muted:#6E7B8C;
+  --line:#DDE3EA;
+  --line-soft:#EAEFF4;
+  --paper:#F5F7F9;
+  --surface:#FFFFFF;
+  --accent:#0D6E6E;
+  --accent-soft:#E2EFEE;
+  --accent-line:#9FC9C6;
+  --warn:#9C4A2F;
+  --warn-soft:#F6E7E1;
+  --gold:#7E6318;
+  --gold-soft:#F4EEDC;
+  --shadow:0 1px 2px rgba(20,28,38,.05), 0 8px 24px -16px rgba(20,28,38,.28);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ink:#E6EDF3;
+    --ink-2:#B7C3D1;
+    --muted:#7E8B9C;
+    --line:#26313F;
+    --line-soft:#1D2733;
+    --paper:#0E141B;
+    --surface:#161F29;
+    --accent:#59C4B8;
+    --accent-soft:#11302E;
+    --accent-line:#2C5F5B;
+    --warn:#DE8D71;
+    --warn-soft:#2E1F19;
+    --gold:#CBAA55;
+    --gold-soft:#2A2415;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.8);
+  }
+}
+:root[data-theme="dark"]{
+  --ink:#E6EDF3;
+  --ink-2:#B7C3D1;
+  --muted:#7E8B9C;
+  --line:#26313F;
+  --line-soft:#1D2733;
+  --paper:#0E141B;
+  --surface:#161F29;
+  --accent:#59C4B8;
+  --accent-soft:#11302E;
+  --accent-line:#2C5F5B;
+  --warn:#DE8D71;
+  --warn-soft:#2E1F19;
+  --gold:#CBAA55;
+  --gold-soft:#2A2415;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.8);
+}
+
+*{box-sizing:border-box}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:"Public Sans","Segoe UI",Helvetica,Arial,sans-serif;
+  font-size:16px;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1120px;margin:0 auto;padding:0 24px 96px}
+
+/* ---------- header ---------- */
+.masthead{
+  border-bottom:2px solid var(--ink);
+  padding:56px 0 22px;
+  margin-bottom:0;
+}
+.eyebrow{
+  font-family:"IBM Plex Mono",ui-monospace,monospace;
+  font-size:11.5px;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:var(--accent);
+  margin:0 0 18px;
+}
+h1{
+  font-family:"Source Serif 4",Georgia,serif;
+  font-weight:700;
+  font-size:clamp(34px,5vw,52px);
+  line-height:1.08;
+  letter-spacing:-.015em;
+  margin:0 0 14px;
+  text-wrap:balance;
+  max-width:19ch;
+}
+.standfirst{
+  font-family:"Source Serif 4",Georgia,serif;
+  font-size:19px;
+  line-height:1.55;
+  color:var(--ink-2);
+  max-width:62ch;
+  margin:0;
+}
+.stamp{
+  font-family:"IBM Plex Mono",ui-monospace,monospace;
+  font-size:11.5px;
+  color:var(--muted);
+  margin-top:22px;
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px 20px;
+}
+
+/* ---------- stat strip ---------- */
+.strip{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+  border-bottom:1px solid var(--line);
+  background:var(--surface);
+}
+.strip > div{
+  padding:20px 22px;
+  border-right:1px solid var(--line-soft);
+}
+.strip > div:last-child{border-right:0}
+.stat-n{
+  font-family:"Source Serif 4",Georgia,serif;
+  font-size:30px;
+  font-weight:600;
+  line-height:1;
+  font-variant-numeric:tabular-nums;
+  letter-spacing:-.01em;
+}
+.stat-l{
+  font-size:12.5px;
+  color:var(--muted);
+  margin-top:7px;
+  line-height:1.35;
+}
+
+/* ---------- layout ---------- */
+.cols{display:grid;grid-template-columns:200px 1fr;gap:56px;margin-top:52px;align-items:start}
+nav.rail{position:sticky;top:28px}
+nav.rail ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+nav.rail a{
+  display:block;
+  padding:6px 0 6px 13px;
+  border-left:2px solid var(--line);
+  color:var(--muted);
+  text-decoration:none;
+  font-size:13.5px;
+  line-height:1.35;
+}
+nav.rail a:hover,nav.rail a:focus-visible{color:var(--accent);border-left-color:var(--accent)}
+main{min-width:0;max-width:74ch}
+
+section{margin-bottom:60px;scroll-margin-top:24px}
+h2{
+  font-family:"Source Serif 4",Georgia,serif;
+  font-size:27px;
+  font-weight:600;
+  letter-spacing:-.01em;
+  line-height:1.2;
+  margin:0 0 6px;
+  text-wrap:balance;
+}
+.sec-note{color:var(--muted);font-size:14px;margin:0 0 26px;padding-bottom:16px;border-bottom:1px solid var(--line)}
+h3{font-size:16px;font-weight:700;margin:32px 0 8px;letter-spacing:-.005em}
+p{margin:0 0 15px;max-width:66ch}
+main ul{margin:0 0 15px;padding-left:20px;max-width:66ch}
+main li{margin-bottom:7px}
+strong{font-weight:600}
+code,.mono{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.875em}
+code{background:var(--line-soft);padding:1.5px 5px;border-radius:3px;color:var(--ink-2);word-break:break-word}
+a{color:var(--accent)}
+
+/* ---------- chart ---------- */
+.chart{margin:8px 0 30px;display:flex;flex-direction:column;gap:11px}
+.row{display:grid;grid-template-columns:minmax(130px,auto) 1fr 58px;gap:14px;align-items:center}
+.row .name{font-size:13.5px;color:var(--ink-2);line-height:1.25}
+.track{height:19px;background:var(--line-soft);position:relative;border-radius:2px}
+.fill{height:100%;background:var(--accent);border-radius:2px}
+.fill.est{background:repeating-linear-gradient(135deg,var(--accent-line) 0 5px,transparent 5px 10px);border:1px solid var(--accent-line)}
+.fill.out{background:repeating-linear-gradient(135deg,var(--warn) 0 4px,transparent 4px 9px);border:1px solid var(--warn);opacity:.75}
+.row.excl .name,.row.excl .val{color:var(--warn)}
+.row .val{
+  font-family:"IBM Plex Mono",ui-monospace,monospace;
+  font-size:13px;font-variant-numeric:tabular-nums;
+  text-align:right;color:var(--ink)
+}
+.axis{
+  display:grid;grid-template-columns:minmax(130px,auto) 1fr 58px;gap:14px;
+  font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:10.5px;color:var(--muted);
+  margin-top:-4px;
+}
+.axis .ticks{display:flex;justify-content:space-between}
+
+/* ---------- source entries ---------- */
+.src{
+  border-left:3px solid var(--line);
+  padding:2px 0 2px 20px;
+  margin-bottom:30px;
+}
+.src.t1{border-left-color:var(--accent)}
+.src.t2{border-left-color:var(--accent-line)}
+.src.t3{border-left-color:var(--line)}
+.src-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:9px;margin-bottom:3px}
+.src-name{font-size:17px;font-weight:700;letter-spacing:-.005em}
+.tag{
+  font-family:"IBM Plex Mono",ui-monospace,monospace;
+  font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;
+  padding:2.5px 7px;border-radius:3px;white-space:nowrap;
+}
+.tag.ok{background:var(--accent-soft);color:var(--accent)}
+.tag.key{background:var(--gold-soft);color:var(--gold)}
+.tag.no{background:var(--warn-soft);color:var(--warn)}
+.src-sub{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:11.5px;color:var(--muted);margin:0 0 11px;word-break:break-all}
+.src p{font-size:14.5px;margin-bottom:11px}
+.src ul{font-size:14.5px}
+
+/* ---------- table ---------- */
+.tbl-wrap{overflow-x:auto;margin:0 0 18px;border:1px solid var(--line);border-radius:4px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:14px;min-width:600px}
+th{
+  text-align:left;font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--muted);font-weight:600;padding:11px 15px;border-bottom:1px solid var(--line);
+  white-space:nowrap;
+}
+td{padding:12px 15px;border-bottom:1px solid var(--line-soft);vertical-align:top;line-height:1.45}
+tr:last-child td{border-bottom:0}
+td.sig{font-weight:600;width:29%}
+td.off{color:var(--ink-2);width:31%}
+
+/* ---------- callout ---------- */
+.call{
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-top:3px solid var(--gold);
+  padding:20px 22px;
+  margin:0 0 22px;
+  border-radius:0 0 4px 4px;
+  box-shadow:var(--shadow);
+}
+.call h3{margin-top:0;font-size:15px}
+.call p:last-child,.call ul:last-child{margin-bottom:0}
+.call.fin{border-top-color:var(--accent)}
+
+.commlist{
+  font-family:"IBM Plex Mono",ui-monospace,monospace;
+  font-size:12.5px;line-height:1.9;color:var(--ink-2);
+}
+
+@media (max-width:820px){
+  .cols{grid-template-columns:1fr;gap:32px}
+  nav.rail{position:static;border-bottom:1px solid var(--line);padding-bottom:18px}
+  nav.rail ol{flex-direction:row;flex-wrap:wrap;gap:2px 6px}
+  nav.rail a{border-left:0;border-bottom:2px solid var(--line);padding:4px 0}
+  main{max-width:none}
+  .row,.axis{grid-template-columns:minmax(96px,auto) 1fr 48px;gap:10px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap">
+
+<header class="masthead">
+  <p class="eyebrow">Étude de sources — prospection professionnels</p>
+  <h1>Détecter les entreprises qui se créent dans le Nord-Gers</h1>
+  <p class="standfirst">Quelles sources publiques existent réellement, ce que chacune donne, ce qu'elle ne donne pas, et combien de signaux exploitables elles produisent par semaine sur ton secteur. Tous les chiffres ci-dessous ont été mesurés en interrogeant les API, pas estimés.</p>
+  <div class="stamp">
+    <span>Vérifié le 3 septembre 2026</span>
+    <span>Périmètre confirmé · clé INSEE active</span>
+    <span>9 sources testées</span>
+  </div>
+</header>
+
+<div class="strip">
+  <div><div class="stat-n">125</div><div class="stat-l">communes dans le périmètre</div></div>
+  <div><div class="stat-n">60 900</div><div class="stat-l">habitants couverts</div></div>
+  <div><div class="stat-n">22,4</div><div class="stat-l">créations exploitables / semaine</div></div>
+  <div><div class="stat-n">28 %</div><div class="stat-l">de fiches à écarter (non diffusibles)</div></div>
+  <div><div class="stat-n">0 €</div><div class="stat-l">coût des sources du socle</div></div>
+</div>
+
+<div class="cols">
+
+<nav class="rail" aria-label="Sommaire">
+  <ol>
+    <li><a href="#perimetre">1 — Le périmètre</a></li>
+    <li><a href="#volume">2 — Le volume réel</a></li>
+    <li><a href="#socle">3 — Le socle</a></li>
+    <li><a href="#enrichir">4 — L'enrichissement</a></li>
+    <li><a href="#actus">5 — Les actualités</a></li>
+    <li><a href="#ecarte">6 — Ce que j'écarte</a></li>
+    <li><a href="#signaux">7 — Au-delà de la création</a></li>
+    <li><a href="#trancher">8 — À trancher</a></li>
+  </ol>
+</nav>
+
+<main>
+
+<section id="perimetre">
+  <h2>1 — Le périmètre, traduit en communes</h2>
+  <p class="sec-note">Ta description orale convertie en liste exploitable par une machine. Bords confirmés.</p>
+
+  <p>Ta zone est la partie nord du Gers, délimitée ainsi : au <strong>nord et à l'ouest</strong> par la limite départementale elle-même — tout le Bas-Armagnac est à toi, jusqu'à Lannemaignan, Monguilhem et Le Houga ; à l'<strong>est</strong> par Lectoure et Saint-Clar, qui sont les dernières ; au <strong>sud</strong> par la ligne Fleurance — Montestruc-sur-Gers, qui file ensuite vers Vic-Fezensac avant de remonter sur Cazaubon. Nogaro et Auch restent dehors.</p>
+
+  <p>En coordonnées, cela donne trois règles : latitude supérieure à 43,76 (Vic-Fezensac est à 43,766 et Montestruc à 43,794, tous deux dedans ; Auch à 43,660, dehors d'office), longitude inférieure à 0,79, et retrait manuel de Nogaro. La coupure est nette à l'est : Saint-Clar est à 0,768 et la commune suivante, Monfort, à 0,813 — il n'y a rien entre les deux, donc aucun cas limite.</p>
+
+  <p>Appliqué aux 458 communes du Gers, on obtient <strong>125 communes et 60 900 habitants</strong>. Les plus peuplées :</p>
+
+  <p class="commlist">Condom (6 473) · Fleurance (6 247) · Eauze (4 108) · Lectoure (3 670) · Vic-Fezensac (3 577) · Cazaubon (1 665) · Le Houga (1 202) · Castelnau d'Auzan Labarrère (1 187) · Jegun (1 176) · Gondrin (1 175) · Montréal (1 171) · Valence-sur-Baïse (1 147)</p>
+
+  <p>Une précision sur <strong>Sainte-Christie</strong> : il en existe deux dans le Gers. Celle près d'Auch (43,755) tombe hors zone toute seule. <em>Sainte-Christie-d'Armagnac</em> (43,794), elle, est dans ton secteur — c'est bien la première que tu excluais.</p>
+
+  <div class="call">
+    <h3>Le piège du code postal</h3>
+    <p>Filtrer les annonces sur les 21 codes postaux de ta zone paraît évident, et c'est faux. <strong>57 communes hors zone partagent un code postal avec elle</strong> — dont précisément celles que tu as exclues : Nogaro partage le 32110, Mauvezin et Solomiac le 32120, Sainte-Christie le 32390, Sarrant et Tournecoupe le 32380.</p>
+    <p>La parade que j'ai testée : filtrer d'abord par code postal pour réduire la requête, puis vérifier le nom de la commune contre ta liste. Sur 1 125 annonces des douze derniers mois, <strong>189 auraient été de fausses alertes</strong>, soit 17 %. Et le rapprochement des noms fonctionne proprement : sur les 100 communes apparaissant dans les annonces, aucune erreur d'orthographe ou d'accent n'a fait échouer l'appariement.</p>
+  </div>
+</section>
+
+<section id="volume">
+  <h2>2 — Ce que ça représente par semaine</h2>
+  <p class="sec-note">Comptages réels sur 12 mois glissants, sur les 125 communes exactes. Plus aucune estimation : les deux API ont été interrogées.</p>
+
+  <div class="chart">
+    <div class="row">
+      <span class="name">Créations <span style="color:var(--muted)">(Sirene)</span></span>
+      <span class="track"><span class="fill" style="width:90%"></span></span>
+      <span class="val">22,4</span>
+    </div>
+    <div class="row">
+      <span class="name">Modifications <span style="color:var(--muted)">(BODACC)</span></span>
+      <span class="track"><span class="fill" style="width:35%"></span></span>
+      <span class="val">8,8</span>
+    </div>
+    <div class="row">
+      <span class="name">Ventes &amp; cessions</span>
+      <span class="track"><span class="fill" style="width:3.6%"></span></span>
+      <span class="val">0,9</span>
+    </div>
+    <div class="row excl">
+      <span class="name">Non diffusibles</span>
+      <span class="track"><span class="fill out" style="width:35.6%"></span></span>
+      <span class="val">8,9</span>
+    </div>
+    <div class="axis">
+      <span></span>
+      <span class="ticks"><span>0</span><span>5</span><span>10</span><span>15</span><span>20</span><span>25</span></span>
+      <span></span>
+    </div>
+  </div>
+
+  <p>Sirene recense <strong>1 627 créations d'établissements</strong> sur ta zone en douze mois, soit 31,3 par semaine — près de quatre fois ce que voit le BODACC seul, qui n'en publie que 8,7. L'écart, ce sont les entrepreneurs individuels : dans l'échantillon de Condom, la totalité des créations récentes portait la catégorie juridique 1000, celle de l'entreprise individuelle. Ma première estimation à deux tiers était en dessous de la réalité de ton secteur.</p>
+
+  <p>Les créations du BODACC n'apparaissent plus dans ce graphique : elles sont <strong>déjà comprises</strong> dans le chiffre Sirene, et les compter deux fois gonflait artificiellement mon total précédent. Le BODACC garde toute sa valeur pour ce que Sirene ne dit pas — les modifications et les cessions de fonds.</p>
+
+  <p>Total exploitable : environ <strong>32 signaux par semaine</strong>, dont 22 créations. Au bout d'un trimestre, plus de 400 fiches — ingérable sans outil de suivi.</p>
+
+  <div class="call">
+    <h3>28 % des créations doivent être écartées</h3>
+    <p>C'est la découverte du test, et elle n'était pas dans mes prévisions. Sur les 1 627 créations, <strong>461 sont « non diffusibles »</strong> : ces entrepreneurs ont exercé leur droit de s'opposer à la diffusion publique de leurs données. L'API les renvoie avec la mention <code>[ND]</code> à la place du nom et de l'adresse.</p>
+    <p>Ce n'est pas un défaut technique, c'est un choix légal de leur part, et il doit être respecté : <strong>ces fiches ne peuvent pas servir à de la prospection.</strong> Le filtre <code>statutDiffusionEtablissement:O</code> les élimine à la source, et je le mettrai dans la requête plutôt que dans un tri a posteriori — pour que ces données n'entrent jamais dans ta base.</p>
+    <p>Reste <strong>22,4 créations réellement exploitables par semaine</strong>. C'est le chiffre sur lequel il faut raisonner.</p>
+  </div>
+</section>
+
+<section id="socle">
+  <h2>3 — Le socle : deux sources, zéro euro</h2>
+  <p class="sec-note">Tier 1 — ce sur quoi l'application doit être bâtie.</p>
+
+  <div class="src t1">
+    <div class="src-head">
+      <span class="src-name">BODACC</span>
+      <span class="tag ok">testé · sans clé</span>
+    </div>
+    <p class="src-sub">bodacc-datadila.opendatasoft.com/api/explore/v2.1/…/annonces-commerciales</p>
+    <p>Le Bulletin officiel des annonces civiles et commerciales. C'est <em>la</em> source — et c'est aussi celle que recopient les journaux d'annonces légales que tu voulais consulter. API ouverte, sans compte, sans quota bloquant, filtrable par département, code postal, ville, famille d'annonce et date de parution.</p>
+    <p>Chaque annonce de création contient déjà : dénomination, forme juridique, <strong>capital social</strong>, adresse complète du siège, <strong>nom et fonction des dirigeants</strong>, catégorie de création, date d'immatriculation et greffe. Sur l'exemple récupéré en test : <code>RDAS</code>, SAS au capital de 1 000 €, 13 Place de la Halle à Solomiac, présidente et directeur général nommés, immatriculée le 11/08/2026.</p>
+    <p><strong>Sa limite, à connaître absolument :</strong> le BODACC ne publie que les immatriculations au registre du commerce. Les micro-entrepreneurs, une partie des artisans et les professions libérales n'y figurent pas. Il te manquerait donc les deux tiers du gisement — et probablement la part la plus proche de ta cible « petit entrepreneur qui se lance ».</p>
+  </div>
+
+  <div class="src t1">
+    <div class="src-head">
+      <span class="src-name">API Sirene — INSEE</span>
+      <span class="tag ok">testé · clé obtenue</span>
+    </div>
+    <p class="src-sub">api.insee.fr/api-sirene/3.11 — en-tête <code>X-INSEE-Api-Key-Integration</code> — 30 requêtes/minute</p>
+    <p>C'est elle qui comble le trou, et le test le confirme largement : <strong>31,3 créations par semaine</strong> sur ta zone contre 8,7 au BODACC. Sirene recense toutes les entreprises immatriculées, entrepreneurs individuels compris, et croise la date de création avec le code commune INSEE, le code NAF et la catégorie juridique.</p>
+    <p>La requête qui nous intéresse s'écrit ainsi, et elle fonctionne :</p>
+    <p><code>codeCommuneEtablissement:32107 AND dateCreationEtablissement:[2026-06-01 TO 2026-09-03] AND statutDiffusionEtablissement:O</code></p>
+    <p>Deux contraintes de mise en œuvre. Le <strong>quota de 30 requêtes par minute</strong> impose de regrouper les communes par paquets d'une vingtaine et d'espacer les appels — sans conséquence pour un traitement hebdomadaire, mais ça se code dès le départ. Et la clé est nominative : elle vit dans un fichier d'environnement local, jamais dans le dépôt de code.</p>
+  </div>
+</section>
+
+<section id="enrichir">
+  <h2>4 — L'enrichissement : qualifier avant d'appeler</h2>
+  <p class="sec-note">Tier 2 — ne détecte rien, mais évite de perdre des appels.</p>
+
+  <div class="src t2">
+    <div class="src-head">
+      <span class="src-name">API Recherche d'entreprises</span>
+      <span class="tag ok">testé · sans clé</span>
+    </div>
+    <p class="src-sub">recherche-entreprises.api.gouv.fr — 7 appels/seconde</p>
+    <p>J'ai lu sa spécification complète : elle <strong>n'a aucun filtre sur la date de création</strong>. Elle ne peut donc pas servir à détecter les nouveautés — beaucoup de gens s'y trompent. En revanche, comme moteur de qualification, elle est excellente. Elle expose le chiffre d'affaires et le résultat net (<code>ca_min</code>, <code>ca_max</code>), la tranche d'effectif, la nature juridique, la géolocalisation, l'inscription au répertoire des métiers, et une trentaine de labels : artisan, RGE, bio, Qualiopi, entreprise du patrimoine vivant, ESS.</p>
+    <p>Test de calibrage sur Fleurance (32500) : 4 570 entreprises enregistrées, dont 2 550 entrepreneurs individuels — mais seulement <strong>182 avec un chiffre d'affaires déclaré supérieur à 100 000 €</strong>. Ce chiffre dit tout sur l'intérêt du filtrage : sans lui, tu appelles surtout des coquilles vides et des SCI.</p>
+  </div>
+
+  <div class="src t2">
+    <div class="src-head">
+      <span class="src-name">Google Places API</span>
+      <span class="tag key">payant · quota gratuit suffisant</span>
+    </div>
+    <p class="src-sub">recherche « dénomination + commune » → téléphone, site web, horaires</p>
+    <p>Aucune source publique française ne donne le téléphone ni l'email. Places est la voie la plus propre pour les récupérer : c'est l'usage prévu par le service, et à quarante fiches par semaine tu restes très en deçà du crédit mensuel offert. À défaut, le site de l'entreprise quand il existe : les mentions légales portent souvent le numéro.</p>
+  </div>
+</section>
+
+<section id="actus">
+  <h2>5 — La piste actualités : réelle, mais secondaire</h2>
+  <p class="sec-note">Tu as demandé si les nouvelles locales pouvaient ouvrir des opportunités. Voici le test.</p>
+
+  <div class="src t3">
+    <div class="src-head">
+      <span class="src-name">La Dépêche du Midi — section Gers</span>
+      <span class="tag ok">flux trouvé · 25 articles</span>
+    </div>
+    <p class="src-sub">ladepeche.fr/grand-sud/gers/rss.xml</p>
+    <p>C'est le seul flux d'actualité locale qui fonctionne vraiment. J'ai dû le chercher : le flux « communes du Gers » que le site expose officiellement est <strong>vide</strong>, il ne contient aucun article. Celui-là en contient 25, renouvelés en continu.</p>
+    <p>Mais j'ai lu les 25 titres du jour, et le verdict est net : procès, rentrée scolaire, rugby amateur, fêtes de village, incendie, carnet noir. <strong>Zéro signal commercial sur 25 articles.</strong> La presse locale parle d'ouvertures de commerce, mais à une fréquence de l'ordre d'une ou deux par semaine, noyées dans le reste.</p>
+    <p>Ma recommandation : on l'intègre, filtré sur des mots-clés (<em>ouvre, s'installe, inaugure, reprend, nouvelle boutique, rachète</em>), dans une section à part de l'email, clairement séparée des données officielles. Le gain est réel — un article de presse sort souvent <em>avant</em> la publication au BODACC, et il te donne le contexte humain qu'aucune base de données n'aura jamais. Mais ça ne peut pas être le cœur du système, et le flux ne gardant que 25 articles, il faudra l'interroger tous les jours pour ne rien rater.</p>
+  </div>
+</section>
+
+<section id="ecarte">
+  <h2>6 — Ce que j'écarte, et pourquoi</h2>
+  <p class="sec-note">Y compris deux pistes que tu citais.</p>
+
+  <div class="src t3">
+    <div class="src-head">
+      <span class="src-name">La CCI du Gers</span>
+      <span class="tag no">payant</span>
+    </div>
+    <p>Ta piste CCI mérite une réponse franche : la chambre <strong>ne publie pas</strong> de liste ouverte des entreprises nouvellement créées. Elle en <em>vend</em> l'accès, via l'Annuaire des Entreprises de France, en fichier sur mesure ou en abonnement. Et ce qu'elle vend est construit à partir du même registre du commerce que tu peux interroger gratuitement au BODACC et via Sirene. Payer pour cette donnée n'aurait de sens que si tu voulais un service d'accompagnement autour, pas la donnée seule.</p>
+  </div>
+
+  <div class="src t3">
+    <div class="src-head">
+      <span class="src-name">Le Journal du Gers</span>
+      <span class="tag no">HTTP 403</span>
+    </div>
+    <p>Le site refuse les accès automatisés, sur ses deux adresses de flux. Techniquement contournable, mais un blocage explicite est un refus explicite : je ne le contourne pas.</p>
+  </div>
+
+  <div class="src t3">
+    <div class="src-head">
+      <span class="src-name">Google News (flux RSS)</span>
+      <span class="tag no">renvoie vide</span>
+    </div>
+    <p>Testé sur plusieurs formulations, y compris une requête minimale sur le seul mot « Gers » : le service répond correctement mais ne renvoie aucun article. Inexploitable de façon fiable, donc écarté plutôt que branché sur une source qui tomberait en panne silencieusement.</p>
+  </div>
+
+  <div class="src t3">
+    <div class="src-head">
+      <span class="src-name">Pages Jaunes, Societe.com</span>
+      <span class="tag no">CGU</span>
+    </div>
+    <p>Ce sont les annuaires les plus riches en numéros de téléphone, et leurs conditions d'utilisation interdisent l'extraction automatisée. Je te le signale plutôt que de te le cacher : pour un outil que tu utiliserais dans un cadre professionnel La Poste, ce n'est pas un risque à prendre pour un gain que Google Places apporte proprement.</p>
+  </div>
+</section>
+
+<section id="signaux">
+  <h2>7 — Ce à quoi tu n'avais pas pensé</h2>
+  <p class="sec-note">La création d'entreprise n'est qu'un des cinq déclencheurs que le BODACC publie.</p>
+
+  <p>En regardant les types d'annonces sur douze mois, quelque chose saute aux yeux : <strong>les modifications sont aussi nombreuses que les créations</strong> — 459 contre 451 sur ta zone, et personne ne les exploite. Or pour tes offres précisément, plusieurs d'entre elles sont de meilleurs déclencheurs qu'une création.</p>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr><th>Événement</th><th>Ce qu'il signifie</th><th>L'offre qui colle</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="sig">Vente de fonds de commerce<br><span class="mono" style="color:var(--muted)">0,9/semaine · 48/an</span></td>
+          <td>Un commerce existant change de patron. Le repreneur reprend tous les contrats du prédécesseur et les remet à plat dans les trois mois.</td>
+          <td class="off">Le meilleur signal de la liste. Bbox Pro, contrat Colissimo, affranchissement — tout est renégociable d'un coup.</td>
+        </tr>
+        <tr>
+          <td class="sig">Transfert de siège<br><span class="mono" style="color:var(--muted)">inclus dans les modifications</span></td>
+          <td>L'entreprise déménage. Nouvelle adresse, nouveaux locaux, souvent un vrai local commercial en remplacement du domicile.</td>
+          <td class="off">Réexpédition du courrier, nouvelle ligne fixe et internet, contrat de collecte à la nouvelle adresse.</td>
+        </tr>
+        <tr>
+          <td class="sig">Création<br><span class="mono" style="color:var(--muted)">8,7/semaine · 451/an</span></td>
+          <td>L'entrepreneur n'a encore aucun contrat. Aucun concurrent en place, mais aucun volume non plus au démarrage.</td>
+          <td class="off">Poste mobile, colis à la demande, titres cadeaux dès la première embauche.</td>
+        </tr>
+        <tr>
+          <td class="sig">Changement de dirigeant<br><span class="mono" style="color:var(--muted)">inclus dans les modifications</span></td>
+          <td>Nouvelle personne aux commandes d'une société qui tourne déjà. Elle veut faire ses preuves sur les coûts.</td>
+          <td class="off">Angle « je passe en revue vos frais d'envoi » — l'interlocuteur a changé, ton prédécesseur ne le connaît pas.</td>
+        </tr>
+        <tr>
+          <td class="sig">Dépôt des comptes<br><span class="mono" style="color:var(--muted)">6 888/an sur le 32</span></td>
+          <td>Trop volumineux pour être une alerte, mais c'est ce dépôt qui alimente le chiffre d'affaires visible dans l'API de qualification.</td>
+          <td class="off">Sert au tri, pas à la prospection : c'est ce qui te dit qui pèse 500 k€ et qui pèse 12 k€.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Concrètement, ça veut dire que l'application ne devrait pas s'appeler « nouvelles entreprises » mais quelque chose comme « mouvements du secteur » — et que ton email du lundi aurait deux fois plus de matière utile pour le même coût de développement.</p>
+</section>
+
+<section id="trancher">
+  <h2>8 — Ce qu'il reste à sécuriser</h2>
+  <p class="sec-note">Le périmètre est réglé, la clé INSEE est obtenue et testée. Restent trois points de conformité.</p>
+
+  <h3>Le statut de diffusion, à traiter en premier</h3>
+  <p>Les 28 % de créations non diffusibles ne sont pas un détail de qualité de données : c'est un droit d'opposition exercé par ces entrepreneurs. Le filtre part dans la requête elle-même, pas dans un tri après coup, pour que ces fiches n'entrent jamais dans la base. C'est aussi le point le plus facile à oublier quand on reprendra le code dans six mois — il sera commenté.</p>
+
+  <h3>RGPD</h3>
+  <p>Sirene le rend concret : sur ta zone, l'immense majorité des créations sont des entreprises individuelles, et l'échantillon de Condom montre des noms de personnes et des adresses de domicile. Ce sont des données personnelles, pas des raisons sociales. En prospection B2B l'intérêt légitime couvre l'usage, mais il faut prévoir dès la conception une durée de conservation limitée et la suppression d'une fiche sur demande. Ça se code en une heure au départ, ça se rattrape mal après.</p>
+
+  <h3>Cadre La Poste</h3>
+  <p>Cet outil constituerait un fichier de prospection personnel à côté du CRM de l'entreprise. Ça vaut une question à ton manager ou au correspondant conformité avant la mise en service — pas pour la légalité des sources, qui sont publiques, mais pour la cohabitation avec les règles internes.</p>
+
+  <div class="call fin">
+    <h3>Ma recommandation</h3>
+    <p>BODACC en socle, Sirene branché dès que tu as la clé, l'API Recherche d'entreprises pour trier par chiffre d'affaires et forme juridique, Google Places pour les numéros, La Dépêche en section « à surveiller » de l'email. Et surtout : on traite les cinq types d'événements, pas seulement les créations.</p>
+    <p>Un email le lundi, et derrière un tableau de bord pour marquer qui tu as appelé — parce qu'à quarante lignes par semaine, sans suivi, tu rappelles deux fois les mêmes au bout d'un mois.</p>
+  </div>
+</section>
+
+</main>
+</div>
+</div>

@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "prospection",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["--env-file=.env", "src/server.js"],
+      "port": 4321
+    }
+  ]
+}

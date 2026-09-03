@@ -1,0 +1,19 @@
+# Secrets — ne jamais committer
+.env
+.env.*
+!.env.example
+
+# Dépendances et build
+node_modules/
+dist/
+.next/
+.vercel/
+
+# Données locales
+*.db
+*.sqlite
+data/cache/
+
+# Base locale et sorties générées
+data/prospects.db*
+data/digest.html
