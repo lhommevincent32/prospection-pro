@@ -39,6 +39,21 @@ Les collecteurs ne savent pas lequel des deux ils alimentent : voir `src/store/`
 Dès lors, `collecte.yml` tourne chaque matin et `pages.yml` publie le tableau de bord
 à chaque modification de `public/`.
 
+### Le troisième workflow, et pourquoi il existe
+
+GitHub désactive les tâches planifiées d'un dépôt **public** resté 60 jours sans
+activité. Ce projet n'étant plus modifié une fois en service, la collecte quotidienne
+finirait par s'arrêter d'elle-même.
+
+`maintien.yml` dépose donc chaque 1er du mois un commit d'une ligne dans
+`.github/derniere-activite.txt`, ce qui remet le compteur à zéro. Il vérifie au passage
+que la collecte est toujours active et la réactive sinon.
+
+GitHub ne documente pas précisément ce qu'il considère comme « activité » : l'envoi d'un
+commit est le déclencheur le plus sûr, mais rien ne le garantit formellement. Si la
+désactivation survenait malgré tout, GitHub envoie un courriel d'avertissement, et un
+clic sur **Enable workflow** dans l'onglet Actions suffit à repartir.
+
 La clé de service (`SUPABASE_SERVICE_KEY`) contourne toutes les règles d'accès : elle
 ne doit vivre que dans `.env` et dans les secrets GitHub. La clé « anon », elle, est
 faite pour être publique — elle n'ouvre rien sans connexion.

@@ -1,0 +1,68 @@
+name: Maintien en activité
+
+# GitHub désactive les tâches planifiées d'un dépôt public resté 60 jours sans
+# activité. Ce projet n'étant plus modifié une fois en service, la collecte
+# quotidienne finirait par s'arrêter d'elle-même, sans que rien ne le signale
+# ailleurs qu'à travers un courriel d'avertissement facile à manquer.
+#
+# Ce travail dépose donc un commit minuscule chaque mois pour remettre le
+# compteur à zéro. Il tourne le 1er à 4h12 UTC, avant la collecte du jour.
+#
+# GitHub ne documente pas précisément ce qu'il considère comme « activité » :
+# l'envoi d'un commit est le déclencheur le plus sûr, mais si la désactivation
+# survenait malgré tout, il suffirait de rouvrir l'onglet Actions et de cliquer
+# « Enable workflow » sur la collecte.
+
+on:
+  schedule:
+    - cron: '12 4 1 * *'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: maintien
+  cancel-in-progress: false
+
+jobs:
+  maintien:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Déposer une trace d'activité
+        run: |
+          set -euo pipefail
+          horodatage="$(date -u '+%Y-%m-%d %H:%M UTC')"
+          {
+            echo "Ce fichier n'a qu'un rôle : prouver à GitHub que le dépôt vit."
+            echo ""
+            echo "Sans activité pendant 60 jours, GitHub désactive les tâches"
+            echo "planifiées d'un dépôt public, et la collecte quotidienne"
+            echo "s'arrêterait sans prévenir."
+            echo ""
+            echo "Dernier passage : $horodatage"
+          } > .github/derniere-activite.txt
+
+          git config user.name  'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add .github/derniere-activite.txt
+          git commit -m "Maintien en activité — $horodatage [skip ci]"
+          git push
+
+      - name: Vérifier que la collecte est toujours active
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          etat="$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/collecte.yml" --jq '.state')"
+          echo "État du workflow de collecte : $etat"
+          if [ "$etat" != "active" ]; then
+            gh api --method PUT "repos/$GITHUB_REPOSITORY/actions/workflows/collecte.yml/enable"
+            echo "::warning::La collecte avait été désactivée : elle vient d'être réactivée."
+            echo "La collecte avait été désactivée, elle est réactivée." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "Collecte active, rien à faire." >> "$GITHUB_STEP_SUMMARY"
+          fi
