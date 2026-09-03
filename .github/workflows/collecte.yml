@@ -31,10 +31,20 @@ jobs:
           INSEE_API_KEY: ${{ secrets.INSEE_API_KEY }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
-        run: node src/collect.js 45
-
-      - name: Signaler l'échec
-        if: failure()
         run: |
-          echo "::warning::La collecte a échoué. Vérifier les secrets INSEE_API_KEY," \
-               "SUPABASE_URL et SUPABASE_SERVICE_KEY, ainsi que le quota de l'API Sirene."
+          set -o pipefail
+          node src/collect.js 45 2>&1 | tee collecte.log
+
+      # Recopie le compte rendu sur la page du run, pour qu'il soit lisible sans avoir
+      # à déplier les journaux. La collecte n'affiche jamais la valeur des clés — elle
+      # se contente d'indiquer leur présence — donc la publier ici ne révèle rien.
+      - name: Publier le compte rendu
+        if: always()
+        run: |
+          {
+            echo '## Compte rendu de la collecte'
+            echo ''
+            echo '```'
+            cat collecte.log 2>/dev/null || echo 'Aucune sortie : la collecte ne a pas démarré.'
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
