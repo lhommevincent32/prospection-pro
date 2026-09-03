@@ -17,3 +17,6 @@ data/cache/
 # Base locale et sorties générées
 data/prospects.db*
 data/digest.html
+
+# Fichiers de travail de l'étude de sources
+recherche/
