@@ -22,7 +22,7 @@ jobs:
       name: github-pages
       url: ${{ steps.deploiement.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # L'URL du projet et la clé « anon » sont des valeurs publiques, prévues pour
       # vivre dans une page web : elles n'ouvrent aucun accès sans connexion, les
@@ -41,9 +41,9 @@ jobs:
           sed -i "s|__SUPABASE_URL__|$URL|g; s|__SUPABASE_ANON_KEY__|$CLE|g" public/index.html
           echo "Identifiants injectés."
 
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/configure-pages@v6
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: public
       - id: deploiement
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
