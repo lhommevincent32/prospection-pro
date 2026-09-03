@@ -14,9 +14,31 @@ function entetes(extra = {}) {
   return { apikey: CLE, Authorization: `Bearer ${CLE}`, 'Content-Type': 'application/json', ...extra };
 }
 
+/** Traduit les erreurs les plus fréquentes en conseil actionnable. */
+function conseil(statut, corps) {
+  if (statut === 401 || statut === 403) {
+    return "clé refusée — vérifier SUPABASE_SERVICE_KEY (c'est la clé « service_role », pas la « anon »)";
+  }
+  if (statut === 404) return 'table ou fonction absente — le contenu de supabase/schema.sql a-t-il bien été exécuté ?';
+  if (corps.includes('PGRST204') || corps.includes('does not exist')) {
+    return 'colonne absente — rejouer supabase/schema.sql, qui a évolué depuis';
+  }
+  if (statut === 414) return 'adresse trop longue';
+  return null;
+}
+
 async function rest(chemin, options = {}) {
-  const rep = await fetch(`${URL_BASE}/rest/v1/${chemin}`, { ...options, headers: entetes(options.headers) });
-  if (!rep.ok) throw new Error(`Supabase ${rep.status} sur ${chemin} : ${(await rep.text()).slice(0, 300)}`);
+  let rep;
+  try {
+    rep = await fetch(`${URL_BASE}/rest/v1/${chemin}`, { ...options, headers: entetes(options.headers) });
+  } catch (e) {
+    throw new Error(`Supabase injoignable (${e.message}) — vérifier SUPABASE_URL`);
+  }
+  if (!rep.ok) {
+    const corps = (await rep.text()).slice(0, 300);
+    const aide = conseil(rep.status, corps);
+    throw new Error(`Supabase ${rep.status} sur « ${chemin.split('?')[0]} »${aide ? ` : ${aide}` : ''} — ${corps}`);
+  }
   const texte = await rep.text();
   return texte ? JSON.parse(texte) : null;
 }
@@ -43,10 +65,10 @@ const ligne = (p, maintenant) => ({
 export async function enregistrerLot(prospects) {
   if (!prospects.length) return { nouveaux: 0 };
 
-  const ids = prospects.map((p) => `"${p.id}"`).join(',');
-  const connus = new Set(
-    (await rest(`prospects?select=id&id=in.(${encodeURIComponent(ids)})`)).map((r) => r.id),
-  );
+  // On récupère tous les identifiants connus d'un coup plutôt que de les demander en
+  // `in.(...)` : la table tient dans quelques centaines de lignes, alors qu'une centaine
+  // d'identifiants dans l'URL fabriquait une adresse à la limite de ce qui est accepté.
+  const connus = new Set((await rest('prospects?select=id&limit=100000')).map((r) => r.id));
   const maintenant = new Date().toISOString();
 
   for (let i = 0; i < prospects.length; i += 200) {
@@ -98,8 +120,20 @@ export async function supprimer(id) {
 }
 
 export async function purger(jours = 365) {
-  const n = await rest('rpc/purger_anciennes', { method: 'POST', body: JSON.stringify({ jours }) });
-  return Number(n) || 0;
+  // La fonction SQL peut manquer si le schéma a été exécuté dans une version antérieure.
+  // Ce n'est pas une raison pour perdre la collecte du jour : on se rabat sur une
+  // suppression directe, qui fait exactement la même chose.
+  try {
+    const n = await rest('rpc/purger_anciennes', { method: 'POST', body: JSON.stringify({ jours }) });
+    return Number(n) || 0;
+  } catch {
+    const limite = new Date(Date.now() - jours * 86400000).toISOString();
+    const filtre = `vu_le=lt.${limite}&statut=in.(nouveau,sans_suite)`;
+    const avant = await rest(`prospects?select=id&${filtre}`);
+    if (!avant.length) return 0;
+    await rest(`prospects?${filtre}`, { method: 'DELETE', headers: { Prefer: 'return=minimal' } });
+    return avant.length;
+  }
 }
 
 export async function purgerSansPotentiel() {
