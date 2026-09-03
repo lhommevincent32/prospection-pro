@@ -1,0 +1,49 @@
+name: Publier le tableau de bord
+
+on:
+  push:
+    branches: [main, master]
+    paths: ['public/**', '.github/workflows/pages.yml']
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  publier:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploiement.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # L'URL du projet et la clé « anon » sont des valeurs publiques, prévues pour
+      # vivre dans une page web : elles n'ouvrent aucun accès sans connexion, les
+      # règles d'accès de Supabase s'en chargent. On les injecte quand même ici
+      # plutôt que de les figer dans le dépôt, pour pouvoir changer de projet
+      # Supabase sans toucher au code.
+      - name: Injecter les identifiants Supabase
+        env:
+          URL: ${{ vars.SUPABASE_URL }}
+          CLE: ${{ vars.SUPABASE_ANON_KEY }}
+        run: |
+          if [ -z "$URL" ] || [ -z "$CLE" ]; then
+            echo "::error::Renseigner les variables SUPABASE_URL et SUPABASE_ANON_KEY dans Settings > Secrets and variables > Actions > Variables."
+            exit 1
+          fi
+          sed -i "s|__SUPABASE_URL__|$URL|g; s|__SUPABASE_ANON_KEY__|$CLE|g" public/index.html
+          echo "Identifiants injectés."
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+      - id: deploiement
+        uses: actions/deploy-pages@v4

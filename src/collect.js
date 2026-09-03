@@ -2,7 +2,7 @@ import { collecterSirene } from './sources/sirene.js';
 import { collecterBodacc } from './sources/bodacc.js';
 import { collecterPresse } from './sources/presse.js';
 import { enrichirDepuisSirene } from './enrichir.js';
-import { enregistrer, journaliser, statistiques, purger } from './db.js';
+import { enregistrerLot, journaliser, statistiques, purger, OU } from './store/index.js';
 
 const jour = (d) => d.toISOString().slice(0, 10);
 
@@ -29,14 +29,13 @@ async function lancer(nom, fn) {
   process.stdout.write(`  ${nom.padEnd(10)} `);
   try {
     const { prospects, stats } = await fn();
-    let nouveaux = 0;
-    for (const p of prospects) if (enregistrer(p)) nouveaux++;
+    const { nouveaux } = await enregistrerLot(prospects);
     stats.nouveaux = nouveaux;
-    journaliser(nom, stats);
+    await journaliser(nom, stats);
     console.log(`${String(stats.examines).padStart(5)} examinés · ${String(nouveaux).padStart(4)} nouveaux · ${stats.ecartes} écartés`);
     return nouveaux;
   } catch (err) {
-    journaliser(nom, { erreur: err.message });
+    await journaliser(nom, { erreur: err.message });
     console.log(`échec — ${err.message}`);
     return 0;
   }
@@ -54,11 +53,11 @@ total += await lancer('presse', () => collecterPresse());
 
 process.stdout.write('  enrichi    ');
 const enr = await enrichirDepuisSirene();
-console.log(`${String(enr.examines).padStart(5)} SIREN    · ${String(enr.enrichis).padStart(4)} activités retrouvées${enr.purgees ? ` · ${enr.purgees} SCI écartées` : ''}`);
+console.log(`${String(enr.examines).padStart(5)} SIREN    · ${String(enr.enrichis).padStart(4)} activités retrouvées`);
 
-const purgees = purger(365);
+const purgees = await purger(365);
 if (purgees) console.log(`\n  purge RGPD : ${purgees} fiche(s) de plus d'un an jamais travaillées, supprimées`);
 
-const s = statistiques();
+const s = await statistiques();
 console.log(`\n${total} nouveau(x) prospect(s). Base : ${s.total} fiches, dont ${s.semaine} vues cette semaine.`);
 console.log(`\nPour voir le tableau de bord :  npm start\n`);

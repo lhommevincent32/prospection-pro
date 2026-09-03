@@ -1,6 +1,6 @@
 import { createServer } from 'node:http';
-import { lister, majStatut, supprimer, statistiques, STATUTS, LIBELLE_STATUT } from './db.js';
-import { STYLE, echapper, dateFr, palier, pastillesOffres, libelleEvenement } from './vue.js';
+import { lister, majStatut, supprimer, statistiques, STATUTS, LIBELLE_STATUT } from './store/index.js';
+import { STYLE, echapper, dateFr, palier, pastillesOffres, libelleEvenement, listeRaisons } from './vue.js';
 
 const PORT = Number(process.env.PORT ?? 4321);
 
@@ -14,8 +14,7 @@ function fiche(p) {
     p.date_fait ? dateFr(p.date_fait) : null,
   ].filter(Boolean).map(echapper).join(' · ');
 
-  const raisons = (p.raisons ?? '').split('\n').filter(Boolean)
-    .map((r) => `<li>${echapper(r)}</li>`).join('');
+  const raisons = listeRaisons(p.raisons);
 
   const options = STATUTS.map((s) =>
     `<option value="${s}"${s === p.statut ? ' selected' : ''}>${LIBELLE_STATUT[s]}</option>`).join('');
@@ -28,7 +27,7 @@ function fiche(p) {
     </div>
     <p class="meta">${meta}</p>
     ${p.dirigeants ? `<p class="meta">Dirigeant : <b>${echapper(p.dirigeants)}</b></p>` : ''}
-    ${raisons ? `<ul class="raisons">${raisons}</ul>` : ''}
+    ${raisons}
     <div class="offres">${pastillesOffres(p.offres)}</div>
     <div class="suivi">
       <select class="statut" aria-label="Statut de ${echapper(p.nom)}">${options}</select>
@@ -39,8 +38,8 @@ function fiche(p) {
   </article>`;
 }
 
-function page(prospects, filtres) {
-  const s = statistiques();
+async function page(prospects, filtres) {
+  const s = await statistiques();
   const compte = Object.fromEntries(s.parStatut.map((r) => [r.statut, r.n]));
   const onglet = (val, lib) => {
     const actif = (filtres.statut ?? '') === val;
@@ -156,12 +155,12 @@ createServer(async (req, rep) => {
         rep.writeHead(400).end('statut inconnu');
         return;
       }
-      majStatut(id, statut, notes);
+      await majStatut(id, statut, notes);
       rep.writeHead(204).end();
       return;
     }
     if (req.method === 'DELETE') {
-      supprimer(id);
+      await supprimer(id);
       rep.writeHead(204).end();
       return;
     }
@@ -174,13 +173,13 @@ createServer(async (req, rep) => {
     genre: url.searchParams.get('genre') || '',
     recherche: url.searchParams.get('q') || '',
   };
-  const prospects = lister({
+  const prospects = await lister({
     statut: filtres.statut || undefined,
     genre: filtres.genre || undefined,
     recherche: filtres.recherche || undefined,
   });
   rep.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-  rep.end(page(prospects, filtres));
+  rep.end(await page(prospects, filtres));
 }).listen(PORT, () => {
   console.log(`\nTableau de bord : http://localhost:${PORT}\n`);
 });

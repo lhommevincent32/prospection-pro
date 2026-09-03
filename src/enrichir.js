@@ -1,6 +1,6 @@
 import { INSEE, INSEE_API_KEY, communeDepuisNom } from './config.js';
 import { scorerEntreprise } from './score.js';
-import { db } from './db.js';
+import { aEnrichir, majEnrichissement } from './store/index.js';
 
 const pause = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -16,20 +16,16 @@ const pause = (ms) => new Promise((r) => setTimeout(r, ms));
 export async function enrichirDepuisSirene() {
   if (!INSEE_API_KEY) return { examines: 0, enrichis: 0 };
 
-  const aFaire = db.prepare(`
-    SELECT id, brut, evenement, capital, commune
-    FROM prospects
-    WHERE genre = 'entreprise' AND naf IS NULL AND source = 'bodacc'
-  `).all();
+  const aFaire = await aEnrichir();
 
   const parSiren = new Map();
   for (const p of aFaire) {
-    const siren = String(JSON.parse(p.brut ?? '{}').siren ?? '').replace(/\D/g, '');
+    const brut = typeof p.brut === 'string' ? JSON.parse(p.brut || '{}') : (p.brut ?? {});
+    const siren = String(brut.siren ?? '').replace(/\D/g, '');
     if (siren.length === 9) parSiren.set(siren, p);
   }
 
   const sirens = [...parSiren.keys()];
-  const maj = db.prepare('UPDATE prospects SET naf=?, activite=?, employeur=?, score=?, offres=?, raisons=? WHERE id=?');
   let enrichis = 0;
 
   for (let i = 0; i < sirens.length; i += INSEE.communesParRequete) {
@@ -70,15 +66,20 @@ export async function enrichirDepuisSirene() {
         population: commune?.pop,
       });
 
-      maj.run(naf, note.activite, note.offres.includes('swile') ? 1 : 0,
-        note.score, note.offres.join(','), note.raisons.join('\n'), p.id);
+      await majEnrichissement(p.id, {
+        naf, activite: note.activite, employeur: note.offres.includes('swile'),
+        score: note.score, offres: note.offres, raisons: note.raisons,
+      });
       enrichis++;
     }
     await pause(INSEE.pauseMs);
   }
 
-  // Une SCI ou une holding révélée par l'enrichissement n'a plus rien à faire dans la base.
-  const purgees = db.prepare("DELETE FROM prospects WHERE score <= 0 AND statut = 'nouveau'").run().changes;
+  // Les SCI et holdings révélées par l'enrichissement gardent un score nul : elles
+  // restent en base sans jamais s'afficher, filtrées par le `score > 0` des listes.
+  // Les supprimer serait pire : la collecte suivante les réinsérerait sans code
+  // d'activité, et on paierait un appel Sirene de plus pour les écarter à nouveau.
+  const sansPotentiel = aFaire.length - enrichis;
 
-  return { examines: sirens.length, enrichis, purgees };
+  return { examines: sirens.length, enrichis, sansPotentiel };
 }

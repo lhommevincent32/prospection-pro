@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#141C26">
+<title>Prospection Nord-Gers</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --encre:#141C26; --encre2:#3A4759; --gris:#6E7B8C; --trait:#DDE3EA; --trait2:#EAEFF4;
+  --fond:#F5F7F9; --surface:#FFFFFF;
+  --vert:#0D6E6E; --vert-clair:#E2EFEE;
+  --ambre:#7E6318; --ambre-clair:#F6EEDA;
+  --brique:#9C4A2F; --brique-clair:#F6E7E1;
+}
+@media (prefers-color-scheme:dark){:root{
+  --encre:#E6EDF3; --encre2:#B7C3D1; --gris:#7E8B9C; --trait:#26313F; --trait2:#1D2733;
+  --fond:#0E141B; --surface:#161F29;
+  --vert:#59C4B8; --vert-clair:#11302E;
+  --ambre:#CBAA55; --ambre-clair:#2A2415;
+  --brique:#DE8D71; --brique-clair:#2E1F19;
+}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--fond);color:var(--encre);
+  font:16px/1.55 "Public Sans","Segoe UI",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:var(--vert)}
+.enveloppe{max-width:860px;margin:0 auto;padding:0 14px calc(28px + env(safe-area-inset-bottom))}
+
+/* --- barre du haut, collante : les filtres restent sous la main au défilement --- */
+.haut{position:sticky;top:0;z-index:10;background:var(--fond);
+  padding:14px 0 10px;border-bottom:1px solid var(--trait)}
+h1{font-size:19px;margin:0;letter-spacing:-.01em}
+.sous{margin:2px 0 0;font-size:12.5px;color:var(--gris)}
+.onglets{display:flex;gap:6px;overflow-x:auto;margin-top:11px;padding-bottom:3px;
+  scrollbar-width:none}
+.onglets::-webkit-scrollbar{display:none}
+.onglet{flex:0 0 auto;border:1px solid var(--trait);background:var(--surface);color:var(--gris);
+  font:500 13.5px/1 inherit;padding:9px 13px;border-radius:999px;cursor:pointer;white-space:nowrap}
+.onglet[aria-pressed=true]{background:var(--encre);border-color:var(--encre);color:var(--fond)}
+.onglet b{font:500 11.5px "IBM Plex Mono",monospace;opacity:.65;margin-left:4px}
+.rech{width:100%;margin-top:9px;padding:10px 12px;border:1px solid var(--trait);border-radius:8px;
+  background:var(--surface);color:var(--encre);font:inherit;font-size:15px}
+
+/* --- fiches --- */
+.fiche{background:var(--surface);border:1px solid var(--trait);border-left:4px solid var(--trait);
+  border-radius:8px;padding:14px;margin-top:10px}
+.fiche.fort{border-left-color:var(--vert)}
+.fiche.moyen{border-left-color:var(--ambre)}
+.entete{display:flex;gap:9px;align-items:flex-start;justify-content:space-between}
+.nom{margin:0;font-size:16px;font-weight:700;line-height:1.3;letter-spacing:-.005em}
+.nom a{text-decoration:none}
+.note{flex:0 0 auto;font:600 11.5px/1 "IBM Plex Mono",monospace;padding:5px 8px;border-radius:4px;
+  background:var(--trait2);color:var(--gris)}
+.note.fort{background:var(--vert-clair);color:var(--vert)}
+.note.moyen{background:var(--ambre-clair);color:var(--ambre)}
+.meta{margin:5px 0 0;font-size:13px;color:var(--gris)}
+.meta b{color:var(--encre2);font-weight:600}
+.raisons{margin:9px 0 0;padding:0;list-style:none;font-size:13.5px;color:var(--encre2)}
+.raisons li{position:relative;padding-left:14px;margin-bottom:3px}
+.raisons li::before{content:"";position:absolute;left:0;top:.62em;width:5px;height:5px;
+  border-radius:50%;background:var(--trait)}
+.offres{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px}
+.offre{font:500 11px/1 "IBM Plex Mono",monospace;letter-spacing:.04em;text-transform:uppercase;
+  padding:5px 7px;border-radius:4px;background:var(--trait2);color:var(--encre2)}
+.offre.colis,.offre.flyers{background:var(--vert-clair);color:var(--vert)}
+
+/* --- suivi : cibles tactiles larges, c'est utilisé debout dans la rue --- */
+.suivi{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;padding-top:12px;
+  border-top:1px solid var(--trait2)}
+.suivi select,.suivi input,.suivi button{font:inherit;font-size:14px;padding:10px;
+  border:1px solid var(--trait);border-radius:7px;background:var(--fond);color:var(--encre);
+  min-height:42px}
+.suivi select{flex:0 0 auto}
+.suivi input{flex:1 1 150px;min-width:0}
+.suivi button{flex:0 0 auto;color:var(--brique);cursor:pointer}
+.tel{flex:0 0 auto;display:inline-flex;align-items:center;gap:5px;text-decoration:none;
+  padding:10px 12px;border:1px solid var(--vert);border-radius:7px;color:var(--vert);
+  font-size:14px;min-height:42px}
+.etat{align-self:center;font-size:12.5px;color:var(--vert)}
+
+/* --- connexion --- */
+.porte{max-width:340px;margin:16vh auto;padding:26px 22px;background:var(--surface);
+  border:1px solid var(--trait);border-radius:10px}
+.porte h1{font-size:21px;margin-bottom:6px}
+.porte p{font-size:13.5px;color:var(--gris);margin:0 0 18px}
+.porte input,.porte button{width:100%;font:inherit;font-size:15px;padding:12px;
+  border:1px solid var(--trait);border-radius:8px;background:var(--fond);color:var(--encre)}
+.porte button{margin-top:9px;background:var(--encre);color:var(--fond);border-color:var(--encre);
+  font-weight:600;cursor:pointer}
+.msg{margin-top:14px;font-size:13.5px;color:var(--vert)}
+.msg.erreur{color:var(--brique)}
+.vide{text-align:center;color:var(--gris);font-style:italic;padding:38px 14px}
+:focus-visible{outline:2px solid var(--vert);outline-offset:2px}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+
+<div id="porte" class="porte" hidden>
+  <h1>Prospection Nord-Gers</h1>
+  <p>Saisis ton adresse : tu recevras un lien de connexion par courriel. Pas de mot de passe à retenir.</p>
+  <form id="formConnexion">
+    <input id="courriel" type="email" required autocomplete="email" placeholder="ton@adresse.fr" aria-label="Adresse électronique">
+    <button type="submit">Recevoir le lien</button>
+  </form>
+  <p id="msgConnexion" class="msg" hidden></p>
+</div>
+
+<div id="app" class="enveloppe" hidden>
+  <div class="haut">
+    <h1>Prospection Nord-Gers</h1>
+    <p class="sous" id="resume">Chargement…</p>
+    <div class="onglets" id="onglets" role="group" aria-label="Filtrer par statut"></div>
+    <input id="recherche" class="rech" type="search" placeholder="Nom, commune, activité…" aria-label="Rechercher">
+  </div>
+  <div id="liste"></div>
+</div>
+
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+// Renseigné au déploiement. Ce sont des valeurs publiques : la clé « anon » ne donne
+// accès à rien sans connexion, les règles d'accès de Supabase s'en chargent.
+const SUPABASE_URL = '__SUPABASE_URL__';
+const SUPABASE_ANON_KEY = '__SUPABASE_ANON_KEY__';
+
+const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const STATUTS = {
+  nouveau: 'Nouveau', a_appeler: 'À appeler', appele: 'Appelé',
+  rdv: 'RDV pris', signe: 'Signé', sans_suite: 'Sans suite',
+};
+const OFFRES = { colis: 'Colis', courrier: 'Courrier', flyers: 'Flyers', telecom: 'Téléphonie', swile: 'Swile' };
+const EVENEMENTS = {
+  creation: 'Création', vente: 'Reprise de fonds', transfert: 'Déménagement',
+  dirigeant: 'Nouveau dirigeant', modification: 'Modification',
+};
+
+const $ = (s) => document.querySelector(s);
+const ech = (v) => String(v ?? '').replace(/[&<>"']/g, (c) =>
+  ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+let filtre = { statut: '', recherche: '' };
+
+// ---------------------------------------------------------------- connexion
+$('#formConnexion').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const msg = $('#msgConnexion');
+  const { error } = await sb.auth.signInWithOtp({
+    email: $('#courriel').value.trim(),
+    options: { emailRedirectTo: location.href.split('#')[0] },
+  });
+  msg.hidden = false;
+  msg.className = error ? 'msg erreur' : 'msg';
+  msg.textContent = error
+    ? `Échec : ${error.message}`
+    : 'Lien envoyé. Ouvre ton courriel depuis ce téléphone pour te connecter.';
+});
+
+sb.auth.onAuthStateChange((_e, session) => afficher(session));
+afficher((await sb.auth.getSession()).data.session);
+
+function afficher(session) {
+  $('#porte').hidden = !!session;
+  $('#app').hidden = !session;
+  if (session) charger();
+}
+
+// ---------------------------------------------------------------- données
+async function charger() {
+  let req = sb.from('prospects').select('*').gt('score', 0)
+    .order('score', { ascending: false })
+    .order('date_fait', { ascending: false })
+    .limit(300);
+
+  if (filtre.statut) req = req.eq('statut', filtre.statut);
+  if (filtre.recherche) {
+    const q = `*${filtre.recherche}*`;
+    req = req.or(`nom.ilike.${q},commune.ilike.${q},activite.ilike.${q}`);
+  }
+
+  const [{ data, error }, { data: tous }] = await Promise.all([
+    req,
+    sb.from('prospects').select('statut').gt('score', 0),
+  ]);
+
+  if (error) {
+    $('#liste').innerHTML = `<p class="vide">Impossible de charger : ${ech(error.message)}</p>`;
+    return;
+  }
+  dessinerOnglets(tous ?? []);
+  $('#resume').textContent = `${(tous ?? []).length} fiches · ${data.length} affichées`;
+  $('#liste').innerHTML = data.length
+    ? data.map(fiche).join('')
+    : '<p class="vide">Aucune fiche ne correspond.</p>';
+}
+
+function dessinerOnglets(tous) {
+  const n = tous.reduce((a, r) => ((a[r.statut] = (a[r.statut] ?? 0) + 1), a), {});
+  const bouton = (val, lib, compte) =>
+    `<button class="onglet" data-statut="${val}" aria-pressed="${filtre.statut === val}">${lib}<b>${compte}</b></button>`;
+  $('#onglets').innerHTML = bouton('', 'Tous', tous.length)
+    + Object.entries(STATUTS).map(([v, l]) => bouton(v, l, n[v] ?? 0)).join('');
+}
+
+function palier(score) {
+  return score >= 60 ? ['fort', 'Prioritaire'] : score >= 35 ? ['moyen', 'À regarder'] : ['faible', 'Secondaire'];
+}
+
+function fiche(p) {
+  const [cle, lib] = palier(p.score);
+  const meta = [
+    p.genre === 'entreprise' ? (EVENEMENTS[p.evenement] ?? p.evenement) : p.evenement,
+    p.genre === 'entreprise' ? p.activite : null,
+    [p.adresse, p.commune].filter(Boolean).join(', '),
+    p.date_fait ? new Date(p.date_fait).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : null,
+  ].filter(Boolean).map(ech).join(' · ');
+
+  const options = Object.entries(STATUTS)
+    .map(([v, l]) => `<option value="${v}"${v === p.statut ? ' selected' : ''}>${l}</option>`).join('');
+
+  return `
+  <article class="fiche ${cle}" data-id="${ech(p.id)}">
+    <div class="entete">
+      <h2 class="nom">${p.url ? `<a href="${ech(p.url)}" target="_blank" rel="noopener">${ech(p.nom)}</a>` : ech(p.nom)}</h2>
+      <span class="note ${cle}">${lib} · ${p.score}</span>
+    </div>
+    <p class="meta">${meta}</p>
+    ${p.dirigeants ? `<p class="meta">Dirigeant : <b>${ech(p.dirigeants)}</b></p>` : ''}
+    ${(p.raisons ?? []).length ? `<ul class="raisons">${p.raisons.map((r) => `<li>${ech(r)}</li>`).join('')}</ul>` : ''}
+    <div class="offres">${(p.offres ?? []).map((o) => `<span class="offre ${ech(o)}">${ech(OFFRES[o] ?? o)}</span>`).join('')}</div>
+    <div class="suivi">
+      <select class="statut" aria-label="Statut">${options}</select>
+      <input class="notes" value="${ech(p.notes)}" placeholder="Notes d'appel…" aria-label="Notes">
+      <button class="oublier" aria-label="Oublier cette fiche">Oublier</button>
+      <span class="etat" aria-live="polite"></span>
+    </div>
+  </article>`;
+}
+
+// ---------------------------------------------------------------- actions
+$('#onglets').addEventListener('click', (e) => {
+  const b = e.target.closest('.onglet');
+  if (!b) return;
+  filtre.statut = b.dataset.statut;
+  charger();
+});
+
+let minuteur;
+$('#recherche').addEventListener('input', (e) => {
+  clearTimeout(minuteur);
+  minuteur = setTimeout(() => { filtre.recherche = e.target.value.trim(); charger(); }, 300);
+});
+
+$('#liste').addEventListener('change', async (e) => {
+  const carte = e.target.closest('.fiche');
+  if (!carte || !e.target.matches('.statut, .notes')) return;
+  const etat = carte.querySelector('.etat');
+  const { error } = await sb.from('prospects').update({
+    statut: carte.querySelector('.statut').value,
+    notes: carte.querySelector('.notes').value,
+    maj_le: new Date().toISOString(),
+  }).eq('id', carte.dataset.id);
+  etat.textContent = error ? 'Échec' : 'Enregistré';
+  setTimeout(() => { etat.textContent = ''; }, 1800);
+});
+
+$('#liste').addEventListener('click', async (e) => {
+  if (!e.target.matches('.oublier')) return;
+  const carte = e.target.closest('.fiche');
+  if (!confirm('Supprimer définitivement cette fiche ?\n\nÀ utiliser si la personne demande à ne plus être démarchée.')) return;
+  const { error } = await sb.from('prospects').delete().eq('id', carte.dataset.id);
+  if (!error) carte.remove();
+});
+</script>
+</body>
+</html>

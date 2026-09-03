@@ -1,9 +1,17 @@
 import { LIBELLE_OFFRE } from './score.js';
-import { LIBELLE_STATUT } from './db.js';
+import { LIBELLE_STATUT } from './store/index.js';
 
 export function echapper(s) {
   return String(s ?? '').replace(/[&<>"']/g, (c) =>
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+/** Les raisons arrivent en tableau du store ; on tolère l'ancien format texte. */
+export function listeRaisons(raisons) {
+  const items = Array.isArray(raisons) ? raisons : String(raisons ?? '').split('
+');
+  const li = items.filter(Boolean).map((r) => `<li>${echapper(r)}</li>`).join('');
+  return li ? `<ul class="raisons">${li}</ul>` : '';
 }
 
 export function dateFr(iso) {
@@ -32,8 +40,8 @@ export function palier(score) {
 }
 
 export function pastillesOffres(offres) {
-  return (offres ?? '')
-    .split(',')
+  const liste = Array.isArray(offres) ? offres : String(offres ?? '').split(',');
+  return liste
     .filter(Boolean)
     .map((o) => `<span class="offre offre-${o}">${echapper(LIBELLE_OFFRE[o] ?? o)}</span>`)
     .join('');

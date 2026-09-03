@@ -1,0 +1,40 @@
+name: Collecte des prospects
+
+on:
+  schedule:
+    # Tous les jours à 5h05 UTC, soit 7h05 en heure d'été française.
+    #
+    # Quotidien et non hebdomadaire, pour deux raisons : le flux de La Dépêche ne
+    # conserve que 25 articles, donc un passage par semaine laisserait passer des
+    # événements ; et Sirene publie en différé, ce qui fait que repasser souvent
+    # rattrape les créations arrivées en retard.
+    - cron: '5 5 * * *'
+  workflow_dispatch: {}   # permet aussi de lancer la collecte à la main
+
+concurrency:
+  group: collecte
+  cancel-in-progress: false
+
+jobs:
+  collecte:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Lancer la collecte
+        env:
+          INSEE_API_KEY: ${{ secrets.INSEE_API_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: node src/collect.js 45
+
+      - name: Signaler l'échec
+        if: failure()
+        run: |
+          echo "::warning::La collecte a échoué. Vérifier les secrets INSEE_API_KEY," \
+               "SUPABASE_URL et SUPABASE_SERVICE_KEY, ainsi que le quota de l'API Sirene."

@@ -1,13 +1,13 @@
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { RACINE } from './config.js';
-import { nouveautesDepuis, statistiques } from './db.js';
-import { STYLE, echapper, dateFr, palier, pastillesOffres, libelleEvenement } from './vue.js';
+import { nouveautesDepuis, statistiques } from './store/index.js';
+import { STYLE, echapper, dateFr, palier, pastillesOffres, libelleEvenement, listeRaisons } from './vue.js';
 
 const jours = Number(process.argv[2] ?? 7);
 const depuis = new Date(Date.now() - jours * 86400000).toISOString();
 
-const tout = nouveautesDepuis(depuis);
+const tout = await nouveautesDepuis(depuis);
 const entreprises = tout.filter((p) => p.genre === 'entreprise');
 const evenements = tout.filter((p) => p.genre === 'evenement');
 
@@ -21,8 +21,7 @@ function fiche(p) {
     p.date_fait ? dateFr(p.date_fait) : null,
   ].filter(Boolean).join(' · ');
 
-  const raisons = (p.raisons ?? '').split('\n').filter(Boolean)
-    .map((r) => `<li>${echapper(r)}</li>`).join('');
+  const raisons = listeRaisons(p.raisons);
 
   return `
   <article class="fiche ${pal.cle}">
@@ -32,12 +31,12 @@ function fiche(p) {
     </div>
     <p class="meta">${meta}</p>
     ${p.dirigeants ? `<p class="meta">Dirigeant : <b>${echapper(p.dirigeants)}</b></p>` : ''}
-    ${raisons ? `<ul class="raisons">${raisons}</ul>` : ''}
+    ${raisons}
     <div class="offres">${pastillesOffres(p.offres)}</div>
   </article>`;
 }
 
-const s = statistiques();
+const s = await statistiques();
 const html = `<!doctype html>
 <html lang="fr"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -75,5 +74,20 @@ footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--trait);color:
 
 const sortie = join(RACINE, 'data/digest.html');
 writeFileSync(sortie, html, 'utf8');
-console.log(`\nRécapitulatif écrit : ${sortie}`);
-console.log(`  ${entreprises.length} entreprise(s), ${evenements.length} événement(s) sur ${jours} jours.\n`);
+
+/**
+ * Seconde sortie, sans les balises d'enveloppe : c'est le format attendu pour publier
+ * la page en ligne et la consulter depuis le téléphone. Le contenu est identique.
+ */
+const fragment = html
+  .replace(/^[\s\S]*?<head>/, '')
+  .replace(/<\/head>\s*<body>/, '')
+  .replace(/<\/body><\/html>\s*$/, '')
+  .replace(/<meta[^>]*>\s*/g, '');
+const sortieWeb = join(RACINE, 'data/digest-web.html');
+writeFileSync(sortieWeb, fragment, 'utf8');
+
+console.log(`\nRécapitulatif écrit :`);
+console.log(`  ${sortie}      (à ouvrir ou à envoyer par mail)`);
+console.log(`  ${sortieWeb}  (à publier pour consultation sur téléphone)`);
+console.log(`\n  ${entreprises.length} entreprise(s), ${evenements.length} événement(s) sur ${jours} jours.\n`);

@@ -15,6 +15,34 @@ npm start           # ouvre le tableau de bord sur http://localhost:4321
 
 `npm run collecte 90` élargit la fenêtre à 90 jours si besoin (45 par défaut).
 
+## Où vont les fiches
+
+Le stockage se choisit tout seul, selon ce que contient `.env` :
+
+- **SQLite local** (`data/prospects.db`) si rien n'est configuré. Pratique hors ligne.
+- **Supabase** dès que `SUPABASE_URL` et `SUPABASE_SERVICE_KEY` sont renseignées.
+  C'est ce mode qu'utilise la collecte automatique, et c'est ce que lit le tableau
+  de bord consultable depuis le téléphone.
+
+Les collecteurs ne savent pas lequel des deux ils alimentent : voir `src/store/`.
+
+## Mise en service hébergée
+
+1. **Supabase** — créer un projet, coller `supabase/schema.sql` dans l'éditeur SQL,
+   puis désactiver l'inscription publique une fois son propre compte créé.
+2. **GitHub** — déposer le dépôt en privé, puis dans *Settings > Secrets and
+   variables > Actions* :
+   - onglet **Secrets** : `INSEE_API_KEY`, `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`
+   - onglet **Variables** : `SUPABASE_URL`, `SUPABASE_ANON_KEY`
+3. **Pages** — activer GitHub Pages avec la source « GitHub Actions ».
+
+Dès lors, `collecte.yml` tourne chaque matin et `pages.yml` publie le tableau de bord
+à chaque modification de `public/`.
+
+La clé de service (`SUPABASE_SERVICE_KEY`) contourne toutes les règles d'accès : elle
+ne doit vivre que dans `.env` et dans les secrets GitHub. La clé « anon », elle, est
+faite pour être publique — elle n'ouvre rien sans connexion.
+
 ## Ce que fait la collecte
 
 | Source | Ce qu'elle apporte | Clé |
