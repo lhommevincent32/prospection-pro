@@ -5,6 +5,7 @@ import { enrichirDepuisSirene } from './enrichir.js';
 import { enregistrerLot, journaliser, statistiques, purger, OU } from './store/index.js';
 import { INSEE_API_KEY, COMMUNES } from './config.js';
 import { inspecterUrl } from './store/supabase.js';
+import { fusionnerLot } from './fusion.js';
 
 const jour = (d) => d.toISOString().slice(0, 10);
 
@@ -63,20 +64,24 @@ function verifierConfiguration() {
   console.log('');
 }
 
-async function lancer(nom, fn) {
+/**
+ * Interroge une source sans encore rien écrire.
+ *
+ * L'écriture est repoussée à la fin, quand les trois sources ont répondu : une même
+ * société vue par Sirene et par le BODACC doit être fusionnée avant d'atteindre la
+ * base, sans quoi elle occupe deux fiches avec deux scores différents.
+ */
+async function recolter(nom, fn) {
   process.stdout.write(`  ${nom.padEnd(10)} `);
   try {
     const { prospects, stats } = await fn();
-    const { nouveaux } = await enregistrerLot(prospects);
-    stats.nouveaux = nouveaux;
-    await journaliser(nom, stats).catch(() => {});
-    console.log(`${String(stats.examines).padStart(5)} examinés · ${String(nouveaux).padStart(4)} nouveaux · ${stats.ecartes} écartés`);
-    return nouveaux;
+    console.log(`${String(stats.examines).padStart(5)} examinés · ${String(prospects.length).padStart(4)} retenus · ${stats.ecartes} écartés`);
+    return { prospects, stats: { ...stats, nom } };
   } catch (err) {
-    console.log(`ÉCHEC`);
+    console.log('ÉCHEC');
     echecs.push({ etape: nom, message: err.message });
     await journaliser(nom, { erreur: err.message }).catch(() => {});
-    return 0;
+    return { prospects: [], stats: null };
   }
 }
 
@@ -97,10 +102,27 @@ console.log('');
 verifierConfiguration();
 console.log(`Collecte sur les ${jours} derniers jours (${depuis} → ${jusqua})\n`);
 
+const recoltes = [
+  await recolter('sirene', () => collecterSirene({ depuis, jusqua })),
+  await recolter('bodacc', () => collecterBodacc({ depuis })),
+  await recolter('presse', () => collecterPresse()),
+];
+
+const bruts = recoltes.flatMap((r) => r.prospects);
+const fusionnes = fusionnerLot(bruts);
+const rapproches = bruts.length - fusionnes.length;
+if (rapproches > 0) {
+  console.log(`  fusion     ${String(rapproches).padStart(5)} fiche(s) rapprochée(s) : même entreprise vue par deux sources`);
+}
+
 let total = 0;
-total += await lancer('sirene', () => collecterSirene({ depuis, jusqua }));
-total += await lancer('bodacc', () => collecterBodacc({ depuis }));
-total += await lancer('presse', () => collecterPresse());
+if (fusionnes.length) {
+  const r = await tenter('écriture', () => enregistrerLot(fusionnes), { nouveaux: 0 });
+  total = r?.nouveaux ?? 0;
+}
+for (const { stats } of recoltes) {
+  if (stats) await journaliser(stats.nom, stats).catch(() => {});
+}
 
 process.stdout.write('  enrichi    ');
 const enr = await tenter('enrichissement', () => enrichirDepuisSirene(), { examines: 0, enrichis: 0 });

@@ -1,0 +1,56 @@
+name: Fusionner les doublons
+
+# Reprise unique des fiches enregistrées avant la fusion par SIREN : une même société
+# vue par Sirene et par le BODACC occupait deux lignes, avec deux scores différents.
+#
+# À lancer une seule fois, à la main. Par sécurité, la simulation est le comportement
+# par défaut : elle liste ce qui serait fusionné sans rien modifier. Il faut choisir
+# explicitement « appliquer » pour que les fiches soient réécrites et les doublons
+# supprimés. Les statuts et les notes saisis à la main sont conservés.
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Simuler d'abord, appliquer ensuite"
+        required: true
+        default: simulation
+        type: choice
+        options:
+          - simulation
+          - appliquer
+
+jobs:
+  fusion:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+
+      - name: Rapprocher les fiches
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          MODE: ${{ inputs.mode }}
+        run: |
+          set -o pipefail
+          if [ "$MODE" = "appliquer" ]; then
+            node src/migrer.js --appliquer 2>&1 | tee fusion.log
+          else
+            node src/migrer.js 2>&1 | tee fusion.log
+          fi
+
+      - name: Publier le compte rendu
+        if: always()
+        run: |
+          {
+            echo "## Fusion des doublons — mode : ${{ inputs.mode }}"
+            echo ''
+            echo '```'
+            cat fusion.log 2>/dev/null || echo 'Aucune sortie.'
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

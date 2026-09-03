@@ -1,5 +1,6 @@
 import { BODACC, CODES_POSTAUX, communeDepuisNom } from '../config.js';
 import { scorerEntreprise } from '../score.js';
+import { cleNaturelle } from '../fusion.js';
 
 /** Familles d'annonces exploitables, et l'événement commercial qu'elles signalent. */
 const FAMILLES = {
@@ -101,9 +102,12 @@ export async function collecterBodacc({ depuis }) {
       const { score, offres, raisons, activite } = scorerEntreprise(base);
       if (score <= 0) { stats.ecartes++; continue; }
 
-      const siren = (Array.isArray(a.registre) ? a.registre[0] : a.registre) ?? a.numeroannonce;
+      const brutSiren = (Array.isArray(a.registre) ? a.registre[0] : a.registre) ?? a.numeroannonce;
+      const siren = /^\d{9}$/.test(String(brutSiren).replace(/\D/g, ''))
+        ? String(brutSiren).replace(/\D/g, '')
+        : null;
       prospects.push({
-        id: `bodacc:${a.id}`,
+        id: cleNaturelle({ genre: 'entreprise', siren, cleSource: `bodacc:${a.id}` }),
         genre: 'entreprise',
         source: 'bodacc',
         evenement,
@@ -114,13 +118,13 @@ export async function collecterBodacc({ depuis }) {
         adresse: adresseDe(a.listepersonnes),
         naf: null,
         activite,
-        siren: /^\d{9}$/.test(String(siren).replace(/\D/g, '')) ? String(siren).replace(/\D/g, '') : null,
+        siren,
         dirigeants: dirigeantsDe(a.listepersonnes),
         capital,
         dateFait: a.dateparution,
         url: a.url_complete,
         score, offres, raisons,
-        brut: { siren, formeJuridique: personne.formeJuridique, tribunal: a.tribunal },
+        brut: { siren: siren ?? brutSiren, formeJuridique: personne.formeJuridique, tribunal: a.tribunal },
       });
     }
 

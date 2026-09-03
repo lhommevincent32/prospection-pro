@@ -7,6 +7,8 @@
  * le fichier .env local ni les secrets GitHub, et surtout jamais aller dans la page web.
  */
 
+import { fusionner, depuisLigne } from '../fusion.js';
+
 const URL_BASE = process.env.SUPABASE_URL ?? '';
 const CLE = process.env.SUPABASE_SERVICE_KEY ?? '';
 
@@ -91,6 +93,7 @@ const ligne = (p, maintenant) => ({
   commune: p.commune ?? null, code_commune: p.codeCommune ?? null, code_postal: p.codePostal ?? null,
   adresse: p.adresse ?? null, naf: p.naf ?? null, activite: p.activite ?? null,
   siret: p.siret ?? null, siren: p.siren ?? null,
+  telephone: p.telephone ?? null, site: p.site ?? null,
   dirigeants: p.dirigeants ?? null, capital: p.capital ?? null, employeur: !!p.employeur,
   date_fait: p.dateFait ?? null, url: p.url ?? null, score: p.score ?? 0,
   offres: p.offres ?? [], raisons: p.raisons ?? [], brut: p.brut ?? {},
@@ -108,21 +111,27 @@ const ligne = (p, maintenant) => ({
 export async function enregistrerLot(prospects) {
   if (!prospects.length) return { nouveaux: 0 };
 
-  // On récupère tous les identifiants connus d'un coup plutôt que de les demander en
-  // `in.(...)` : la table tient dans quelques centaines de lignes, alors qu'une centaine
-  // d'identifiants dans l'URL fabriquait une adresse à la limite de ce qui est accepté.
-  const connus = new Set((await rest('prospects?select=id&limit=100000')).map((r) => r.id));
+  // On relit toute la table plutôt que d'interroger identifiant par identifiant : elle
+  // tient dans quelques centaines de lignes, et il faut les colonnes complètes pour
+  // pouvoir refusionner une entreprise déjà connue qui revient par l'autre source.
+  const anciennes = new Map(
+    (await rest('prospects?select=*&limit=100000')).map((r) => [r.id, r]),
+  );
   const maintenant = new Date().toISOString();
 
-  for (let i = 0; i < prospects.length; i += 200) {
-    const paquet = prospects.slice(i, i + 200).map((p) => ligne(p, maintenant));
+  const aEcrire = prospects.map((entrant) => {
+    const ancienne = anciennes.get(entrant.id);
+    return ligne(ancienne ? fusionner(depuisLigne(ancienne), entrant) : entrant, maintenant);
+  });
+
+  for (let i = 0; i < aEcrire.length; i += 200) {
     await rest('prospects?on_conflict=id', {
       method: 'POST',
       headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
-      body: JSON.stringify(paquet),
+      body: JSON.stringify(aEcrire.slice(i, i + 200)),
     });
   }
-  return { nouveaux: prospects.filter((p) => !connus.has(p.id)).length };
+  return { nouveaux: prospects.filter((p) => !anciennes.has(p.id)).length };
 }
 
 export async function journaliser(source, s) {
@@ -146,6 +155,11 @@ export async function lister({ statut, genre, recherche } = {}) {
   if (genre) p.set('genre', `eq.${genre}`);
   if (recherche) p.set('or', `(nom.ilike.*${recherche}*,commune.ilike.*${recherche}*,activite.ilike.*${recherche}*)`);
   return rest(`prospects?${p}`);
+}
+
+/** Toutes les fiches, sans filtre de score : sert à la migration et aux vérifications. */
+export async function toutes() {
+  return rest('prospects?select=*&limit=100000');
 }
 
 export async function majStatut(id, statut, notes) {
@@ -189,7 +203,9 @@ export async function purgerSansPotentiel() {
 }
 
 export async function aEnrichir() {
-  return rest("prospects?select=id,brut,evenement,capital,commune&genre=eq.entreprise&naf=is.null&source=eq.bodacc");
+  // Sans filtre de source : une fiche fusionnée porte « bodacc+sirene », et toute
+  // entreprise sans code d'activité mérite d'être complétée, d'où qu'elle vienne.
+  return rest('prospects?select=id,brut,evenement,capital,commune,siren&genre=eq.entreprise&naf=is.null');
 }
 
 export async function majEnrichissement(id, v) {

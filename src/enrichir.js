@@ -21,7 +21,7 @@ export async function enrichirDepuisSirene() {
   const parSiren = new Map();
   for (const p of aFaire) {
     const brut = typeof p.brut === 'string' ? JSON.parse(p.brut || '{}') : (p.brut ?? {});
-    const siren = String(brut.siren ?? '').replace(/\D/g, '');
+    const siren = String(p.siren ?? brut.siren ?? '').replace(/\D/g, '');
     if (siren.length === 9) parSiren.set(siren, p);
   }
 

@@ -1,5 +1,6 @@
 import { INSEE, INSEE_API_KEY, CODES_INSEE, communeDepuisCode } from '../config.js';
 import { scorerEntreprise } from '../score.js';
+import { cleNaturelle } from '../fusion.js';
 
 const pause = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -79,7 +80,7 @@ export async function collecterSirene({ depuis, jusqua }) {
         if (score <= 0) { stats.ecartes++; continue; }
 
         prospects.push({
-          id: `siret:${e.siret}`,
+          id: cleNaturelle({ genre: 'entreprise', siren: e.siren, cleSource: `siret:${e.siret}` }),
           genre: 'entreprise',
           source: 'sirene',
           evenement: 'creation',

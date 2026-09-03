@@ -13,7 +13,7 @@ const store = distant
 
 export const {
   enregistrerLot, journaliser, nouveautesDepuis, lister, majStatut,
-  supprimer, purger, purgerSansPotentiel, aEnrichir, majEnrichissement, statistiques,
+  supprimer, purger, purgerSansPotentiel, aEnrichir, majEnrichissement, statistiques, toutes,
 } = store;
 
 /** Statuts de suivi, dans l'ordre du cycle de prospection. */

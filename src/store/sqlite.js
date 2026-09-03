@@ -1,5 +1,6 @@
 import { DatabaseSync } from 'node:sqlite';
 import { BASE_SQLITE } from '../config.js';
+import { fusionner, depuisLigne } from '../fusion.js';
 
 /**
  * Stockage local, sans réseau ni compte. Sert au développement et au repli
@@ -44,35 +45,43 @@ const sortie = (r) => r && ({
 
 const INSERT = db.prepare(`
   INSERT INTO prospects (id, genre, source, evenement, nom, commune, code_commune, code_postal,
-    adresse, naf, activite, siret, siren, dirigeants, capital, employeur, date_fait, url, score,
-    offres, raisons, brut, vu_le, maj_le)
-  VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+    adresse, naf, activite, siret, siren, telephone, site, dirigeants, capital, employeur,
+    date_fait, url, score, offres, raisons, brut, vu_le, maj_le)
+  VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
   ON CONFLICT(id) DO UPDATE SET
-    -- On rafraîchit ce qui vient des sources, jamais le statut de suivi ni les notes :
-    -- ce sont les seules colonnes saisies à la main, et une collecte ne doit pas
-    -- effacer le travail de la semaine.
+    -- La fusion a déjà eu lieu en mémoire : la ligne entrante est le résultat consolidé,
+    -- on peut donc tout réécrire. Sauf statut et notes, seules colonnes saisies à la
+    -- main : une collecte ne doit jamais effacer le travail de la semaine.
+    source = excluded.source, evenement = excluded.evenement, nom = excluded.nom,
+    commune = excluded.commune, code_commune = excluded.code_commune,
+    code_postal = excluded.code_postal, adresse = excluded.adresse,
+    naf = excluded.naf, activite = excluded.activite,
+    siret = excluded.siret, siren = excluded.siren,
+    telephone = excluded.telephone, site = excluded.site,
+    dirigeants = excluded.dirigeants, capital = excluded.capital,
+    employeur = excluded.employeur, date_fait = excluded.date_fait, url = excluded.url,
     score = excluded.score, offres = excluded.offres, raisons = excluded.raisons,
-    naf = COALESCE(excluded.naf, prospects.naf),
-    activite = COALESCE(excluded.activite, prospects.activite),
-    siret = COALESCE(excluded.siret, prospects.siret),
-    siren = COALESCE(excluded.siren, prospects.siren),
-    adresse = COALESCE(excluded.adresse, prospects.adresse),
-    dirigeants = COALESCE(excluded.dirigeants, prospects.dirigeants),
-    maj_le = excluded.maj_le`);
+    brut = excluded.brut, vu_le = excluded.vu_le, maj_le = excluded.maj_le`);
+
+const LIRE = db.prepare('SELECT * FROM prospects WHERE id = ?');
 
 export async function enregistrerLot(prospects) {
-  const connus = new Set(db.prepare('SELECT id FROM prospects').all().map((r) => r.id));
   const maintenant = new Date().toISOString();
   let nouveaux = 0;
-  for (const p of prospects) {
-    if (!connus.has(p.id)) nouveaux++;
+  for (const entrant of prospects) {
+    // Une entreprise déjà en base peut revenir par l'autre source, avec un événement
+    // plus intéressant : on refusionne avec ce qui est stocké plutôt que d'écraser.
+    const ancienne = LIRE.get(entrant.id);
+    if (!ancienne) nouveaux++;
+    const p = ancienne ? fusionner(depuisLigne(ancienne), entrant) : entrant;
     INSERT.run(
       p.id, p.genre, p.source, p.evenement ?? null, p.nom, p.commune ?? null,
       p.codeCommune ?? null, p.codePostal ?? null, p.adresse ?? null, p.naf ?? null,
       p.activite ?? null, p.siret ?? null, p.siren ?? null,
+      p.telephone ?? null, p.site ?? null,
       p.dirigeants ?? null, p.capital ?? null, p.employeur ? 1 : 0,
       p.dateFait ?? null, p.url ?? null, p.score ?? 0,
-      (p.offres ?? []).join(','), (p.raisons ?? []).join('\n'),
+      (p.offres ?? []).join(','), (p.raisons ?? []).join(String.fromCharCode(10)),
       JSON.stringify(p.brut ?? {}), p.vuLe ?? maintenant, maintenant,
     );
   }
@@ -102,6 +111,11 @@ export async function lister({ statut, genre, recherche } = {}) {
     .all(...args).map(sortie);
 }
 
+/** Toutes les fiches, sans filtre de score : sert à la migration et aux vérifications. */
+export async function toutes() {
+  return db.prepare('SELECT * FROM prospects').all();
+}
+
 export async function majStatut(id, statut, notes) {
   const champs = ['statut = ?', 'maj_le = ?'];
   const args = [statut, new Date().toISOString()];
@@ -124,7 +138,9 @@ export async function purgerSansPotentiel() {
 }
 
 export async function aEnrichir() {
-  return db.prepare("SELECT id, brut, evenement, capital, commune FROM prospects WHERE genre='entreprise' AND naf IS NULL AND source='bodacc'")
+  // Sans filtre de source : une fiche fusionnée porte « bodacc+sirene », et toute
+  // entreprise sans code d'activité mérite d'être complétée, d'où qu'elle vienne.
+  return db.prepare("SELECT id, brut, evenement, capital, commune, siren FROM prospects WHERE genre='entreprise' AND naf IS NULL")
     .all();
 }
 

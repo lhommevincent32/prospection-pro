@@ -93,6 +93,23 @@ Vic-Fezensac au sud. Nogaro, Auch et Sainte-Christie sont exclues.
 Le filtrage se fait sur le **nom de commune**, pas sur le code postal : 57 communes hors
 secteur partagent un code postal avec le nôtre, dont précisément celles qui sont exclues.
 
+## Une entreprise, une fiche
+
+Sirene et le BODACC voient tous deux les sociétés : sans rapprochement, une même
+société occupait deux lignes avec deux scores différents. Les fiches sont donc
+identifiées par leur **SIREN** — l'entreprise, pas l'établissement — et fusionnées
+quand les deux sources la décrivent.
+
+La fusion n'est pas un simple choix du mieux noté : le BODACC apporte l'événement
+et le capital, Sirene apporte le code d'activité, et **le score est recalculé** une
+fois les deux réunis. Un déménagement signalé par le BODACC, invisible dans Sirene,
+peut ainsi être noté avec l'activité que seul Sirene connaissait.
+
+`src/migrer.js` reprend les fiches enregistrées avant ce changement. Il simule par
+défaut et n'écrit qu'avec `--appliquer` ; le workflow **Fusionner les doublons** fait
+la même chose sur Supabase. Statuts et notes sont conservés, en gardant le statut le
+plus avancé des fiches rapprochées.
+
 ## Le score
 
 De 0 à 100, il ne sert qu'à donner un ordre de lecture. Il combine le type d'activité
