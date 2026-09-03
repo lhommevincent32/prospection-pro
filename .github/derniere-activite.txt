@@ -1,0 +1,7 @@
+Ce fichier n'a qu'un rôle : prouver à GitHub que le dépôt vit.
+
+Sans activité pendant 60 jours, GitHub désactive les tâches
+planifiées d'un dépôt public, et la collecte quotidienne
+s'arrêterait sans prévenir.
+
+Dernier passage : 2026-09-03 21:46 UTC
