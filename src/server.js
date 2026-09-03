@@ -1,6 +1,6 @@
 import { createServer } from 'node:http';
 import { lister, majStatut, supprimer, statistiques, STATUTS, LIBELLE_STATUT } from './store/index.js';
-import { STYLE, echapper, dateFr, palier, pastillesOffres, libelleEvenement, listeRaisons } from './vue.js';
+import { STYLE, echapper, dateFr, palier, pastillesOffres, libelleEvenement, listeRaisons, identifiant, boutonsContact } from './vue.js';
 
 const PORT = Number(process.env.PORT ?? 4321);
 
@@ -27,8 +27,10 @@ function fiche(p) {
     </div>
     <p class="meta">${meta}</p>
     ${p.dirigeants ? `<p class="meta">Dirigeant : <b>${echapper(p.dirigeants)}</b></p>` : ''}
+    ${identifiant(p) ? `<p class="ident">${identifiant(p)}</p>` : ''}
     ${raisons}
     <div class="offres">${pastillesOffres(p.offres)}</div>
+    ${p.genre === 'entreprise' ? boutonsContact(p) : ''}
     <div class="suivi">
       <select class="statut" aria-label="Statut de ${echapper(p.nom)}">${options}</select>
       <input class="notes" value="${echapper(p.notes)}" placeholder="Notes d'appel…" aria-label="Notes">

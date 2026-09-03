@@ -8,10 +8,45 @@ export function echapper(s) {
 
 /** Les raisons arrivent en tableau du store ; on tolère l'ancien format texte. */
 export function listeRaisons(raisons) {
-  const items = Array.isArray(raisons) ? raisons : String(raisons ?? '').split('
-');
+  const items = Array.isArray(raisons) ? raisons : String(raisons ?? '').split(/\r?\n/);
   const li = items.filter(Boolean).map((r) => `<li>${echapper(r)}</li>`).join('');
   return li ? `<ul class="raisons">${li}</ul>` : '';
+}
+
+/**
+ * Identifiant officiel de l'entreprise. Le SIRET désigne l'établissement, le SIREN
+ * l'entreprise : le BODACC ne publie que le second. Affiché tel quel pour pouvoir
+ * être recopié dans les outils internes.
+ */
+export function identifiant(p) {
+  if (p.siret) return `SIRET ${p.siret.replace(/(\d{3})(\d{3})(\d{3})(\d{5})/, '$1 $2 $3 $4')}`;
+  if (p.siren) return `SIREN ${p.siren.replace(/(\d{3})(\d{3})(\d{3})/, '$1 $2 $3')}`;
+  return null;
+}
+
+/**
+ * Boutons de contact.
+ *
+ * Aucune source publique française ne donne le téléphone d'une entreprise, et
+ * OpenStreetMap ne couvre que 4 % des créations récentes — mesuré, pas supposé.
+ * Plutôt qu'un enrichissement automatique de mauvaise qualité, on prépare la
+ * recherche : un geste suffit, et le résultat est bien meilleur.
+ */
+export function boutonsContact(p) {
+  const b = [];
+  if (p.telephone) {
+    b.push(`<a class="act tel" href="tel:${echapper(p.telephone.replace(/\s/g, ''))}">Appeler</a>`);
+  }
+  if (p.site) b.push(`<a class="act" href="${echapper(p.site)}" target="_blank" rel="noopener">Site</a>`);
+
+  const requete = encodeURIComponent(`${p.nom} ${p.commune ?? ''} téléphone`);
+  b.push(`<a class="act" href="https://www.google.com/search?q=${requete}" target="_blank" rel="noopener">Chercher</a>`);
+
+  const lieu = [p.adresse, p.code_postal, p.commune].filter(Boolean).join(' ');
+  if (lieu) {
+    b.push(`<a class="act" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(lieu)}" target="_blank" rel="noopener">Itinéraire</a>`);
+  }
+  return `<div class="actions">${b.join('')}</div>`;
 }
 
 export function dateFr(iso) {
@@ -93,6 +128,14 @@ h1{font-size:26px;letter-spacing:-.01em;margin:0 0 4px}
 .offre{font:500 11px/1 "IBM Plex Mono",ui-monospace,monospace;letter-spacing:.04em;
   text-transform:uppercase;padding:4px 7px;border-radius:3px;background:var(--trait2);color:var(--encre2)}
 .offre-colis,.offre-flyers{background:var(--vert-clair);color:var(--vert)}
+.ident{font:500 12px "IBM Plex Mono",ui-monospace,monospace;color:var(--gris);
+  margin:6px 0 0;letter-spacing:.02em}
+.actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:11px}
+.act{display:inline-flex;align-items:center;text-decoration:none;font-size:13px;
+  padding:7px 11px;border:1px solid var(--trait);border-radius:6px;color:var(--encre2);
+  background:var(--surface)}
+.act:hover{border-color:var(--vert);color:var(--vert)}
+.act.tel{border-color:var(--vert);color:var(--vert);font-weight:600}
 .groupe-titre{font-size:13px;letter-spacing:.07em;text-transform:uppercase;color:var(--gris);
   font-weight:600;margin:32px 0 12px;padding-bottom:7px;border-bottom:1px solid var(--trait)}
 `;

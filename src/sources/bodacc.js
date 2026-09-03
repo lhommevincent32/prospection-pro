@@ -114,6 +114,7 @@ export async function collecterBodacc({ depuis }) {
         adresse: adresseDe(a.listepersonnes),
         naf: null,
         activite,
+        siren: /^\d{9}$/.test(String(siren).replace(/\D/g, '')) ? String(siren).replace(/\D/g, '') : null,
         dirigeants: dirigeantsDe(a.listepersonnes),
         capital,
         dateFait: a.dateparution,

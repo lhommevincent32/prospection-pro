@@ -14,7 +14,8 @@ PRAGMA journal_mode = WAL;
 CREATE TABLE IF NOT EXISTS prospects (
   id TEXT PRIMARY KEY, genre TEXT NOT NULL, source TEXT NOT NULL, evenement TEXT,
   nom TEXT NOT NULL, commune TEXT, code_commune TEXT, code_postal TEXT, adresse TEXT,
-  naf TEXT, activite TEXT, dirigeants TEXT, capital INTEGER, employeur INTEGER DEFAULT 0,
+  naf TEXT, activite TEXT, siret TEXT, siren TEXT, telephone TEXT, site TEXT,
+  dirigeants TEXT, capital INTEGER, employeur INTEGER DEFAULT 0,
   date_fait TEXT, url TEXT, score INTEGER DEFAULT 0, offres TEXT, raisons TEXT, brut TEXT,
   vu_le TEXT NOT NULL, statut TEXT NOT NULL DEFAULT 'nouveau', notes TEXT DEFAULT '', maj_le TEXT
 );
@@ -28,6 +29,11 @@ CREATE TABLE IF NOT EXISTS collectes (
 );
 `);
 
+// Rattrape les bases créées avant l'ajout de ces colonnes.
+for (const col of ['siret TEXT', 'siren TEXT', 'telephone TEXT', 'site TEXT']) {
+  try { db.exec(`ALTER TABLE prospects ADD COLUMN ${col}`); } catch { /* déjà présente */ }
+}
+
 /** Les listes sont stockées en texte ici, en tableaux chez Supabase : on uniformise. */
 const sortie = (r) => r && ({
   ...r,
@@ -38,11 +44,20 @@ const sortie = (r) => r && ({
 
 const INSERT = db.prepare(`
   INSERT INTO prospects (id, genre, source, evenement, nom, commune, code_commune, code_postal,
-    adresse, naf, activite, dirigeants, capital, employeur, date_fait, url, score, offres,
-    raisons, brut, vu_le, maj_le)
-  VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+    adresse, naf, activite, siret, siren, dirigeants, capital, employeur, date_fait, url, score,
+    offres, raisons, brut, vu_le, maj_le)
+  VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
   ON CONFLICT(id) DO UPDATE SET
+    -- On rafraîchit ce qui vient des sources, jamais le statut de suivi ni les notes :
+    -- ce sont les seules colonnes saisies à la main, et une collecte ne doit pas
+    -- effacer le travail de la semaine.
     score = excluded.score, offres = excluded.offres, raisons = excluded.raisons,
+    naf = COALESCE(excluded.naf, prospects.naf),
+    activite = COALESCE(excluded.activite, prospects.activite),
+    siret = COALESCE(excluded.siret, prospects.siret),
+    siren = COALESCE(excluded.siren, prospects.siren),
+    adresse = COALESCE(excluded.adresse, prospects.adresse),
+    dirigeants = COALESCE(excluded.dirigeants, prospects.dirigeants),
     maj_le = excluded.maj_le`);
 
 export async function enregistrerLot(prospects) {
@@ -54,7 +69,8 @@ export async function enregistrerLot(prospects) {
     INSERT.run(
       p.id, p.genre, p.source, p.evenement ?? null, p.nom, p.commune ?? null,
       p.codeCommune ?? null, p.codePostal ?? null, p.adresse ?? null, p.naf ?? null,
-      p.activite ?? null, p.dirigeants ?? null, p.capital ?? null, p.employeur ? 1 : 0,
+      p.activite ?? null, p.siret ?? null, p.siren ?? null,
+      p.dirigeants ?? null, p.capital ?? null, p.employeur ? 1 : 0,
       p.dateFait ?? null, p.url ?? null, p.score ?? 0,
       (p.offres ?? []).join(','), (p.raisons ?? []).join('\n'),
       JSON.stringify(p.brut ?? {}), p.vuLe ?? maintenant, maintenant,

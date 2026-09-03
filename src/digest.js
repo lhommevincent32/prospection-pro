@@ -2,7 +2,7 @@ import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { RACINE } from './config.js';
 import { nouveautesDepuis, statistiques } from './store/index.js';
-import { STYLE, echapper, dateFr, palier, pastillesOffres, libelleEvenement, listeRaisons } from './vue.js';
+import { STYLE, echapper, dateFr, palier, pastillesOffres, libelleEvenement, listeRaisons, identifiant, boutonsContact } from './vue.js';
 
 const jours = Number(process.argv[2] ?? 7);
 const depuis = new Date(Date.now() - jours * 86400000).toISOString();
@@ -31,8 +31,10 @@ function fiche(p) {
     </div>
     <p class="meta">${meta}</p>
     ${p.dirigeants ? `<p class="meta">Dirigeant : <b>${echapper(p.dirigeants)}</b></p>` : ''}
+    ${identifiant(p) ? `<p class="ident">${identifiant(p)}</p>` : ''}
     ${raisons}
     <div class="offres">${pastillesOffres(p.offres)}</div>
+    ${p.genre === 'entreprise' ? boutonsContact(p) : ''}
   </article>`;
 }
 

@@ -90,6 +90,8 @@ export async function collecterSirene({ depuis, jusqua }) {
           adresse: adresseDe(a),
           naf: base.naf,
           activite,
+          siret: e.siret,
+          siren: e.siren,
           employeur: base.employeur,
           dateFait: e.dateCreationEtablissement,
           url: `https://annuaire-entreprises.data.gouv.fr/entreprise/${e.siren}`,

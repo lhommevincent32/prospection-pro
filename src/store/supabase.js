@@ -25,6 +25,7 @@ const ligne = (p, maintenant) => ({
   id: p.id, genre: p.genre, source: p.source, evenement: p.evenement ?? null, nom: p.nom,
   commune: p.commune ?? null, code_commune: p.codeCommune ?? null, code_postal: p.codePostal ?? null,
   adresse: p.adresse ?? null, naf: p.naf ?? null, activite: p.activite ?? null,
+  siret: p.siret ?? null, siren: p.siren ?? null,
   dirigeants: p.dirigeants ?? null, capital: p.capital ?? null, employeur: !!p.employeur,
   date_fait: p.dateFait ?? null, url: p.url ?? null, score: p.score ?? 0,
   offres: p.offres ?? [], raisons: p.raisons ?? [], brut: p.brut ?? {},
@@ -32,9 +33,12 @@ const ligne = (p, maintenant) => ({
 });
 
 /**
- * Insère par paquets. `merge-duplicates` fait qu'une fiche déjà connue est mise à
- * jour plutôt que rejetée — mais on ne renvoie que les colonnes calculées, pour ne
- * jamais écraser le statut de suivi ni les notes saisies à la main.
+ * Insère par paquets. `merge-duplicates` met à jour les fiches déjà connues.
+ *
+ * Les colonnes `statut` et `notes` ne figurent volontairement pas dans les lignes
+ * envoyées : ce sont les seules saisies à la main, et PostgREST ne touche pas aux
+ * colonnes absentes du corps. Une collecte ne peut donc jamais effacer le travail
+ * de la semaine.
  */
 export async function enregistrerLot(prospects) {
   if (!prospects.length) return { nouveaux: 0 };

@@ -102,6 +102,27 @@ cette fenêtre à 7 jours, sinon les créations publiées en retard sont perdues
 définitivement. Le dédoublonnage fait que seules les fiches réellement nouvelles
 remontent.
 
+## Le téléphone et le site : pourquoi ils ne sont pas remplis
+
+Les colonnes `telephone` et `site` existent mais restent vides. Aucune source publique
+française ne publie le téléphone d'une entreprise, et les deux pistes gratuites ont été
+mesurées avant d'être écartées :
+
+- **OpenStreetMap** recense 744 numéros sur la zone, mais n'apparie que **4 %** des
+  prospects — et l'essentiel de ces 4 % est du bruit. C'est logique : personne ne
+  cartographie une entreprise la semaine de sa création.
+- **Pages Jaunes** et **Societe.com** l'interdisent dans leurs conditions d'utilisation.
+
+Chaque fiche porte donc un bouton **Chercher**, qui ouvre une recherche déjà remplie avec
+le nom et la commune, et un bouton **Itinéraire**. Un appui, et le résultat est meilleur
+que ce qu'un enrichissement automatique aurait produit.
+
+Si tu veux automatiser malgré tout, **Google Places** donne le téléphone et le site de
+façon fiable, dans les clous de ses conditions, et gratuitement à ce volume — mais il
+faut un compte Google Cloud avec une carte bancaire enregistrée. Le jour où tu l'ouvres,
+il suffira de remplir ces deux colonnes : l'affichage est déjà prêt et fera apparaître
+un bouton **Appeler**.
+
 ## RGPD
 
 La plupart des fiches concernent des entreprises individuelles : ce sont des personnes

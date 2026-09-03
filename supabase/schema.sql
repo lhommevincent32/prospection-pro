@@ -13,6 +13,10 @@ create table if not exists prospects (
   adresse       text,
   naf           text,
   activite      text,
+  siret         text,
+  siren         text,
+  telephone     text,          -- laissé vide par la collecte : aucune source publique ne le donne
+  site          text,
   dirigeants    text,
   capital       integer,
   employeur     boolean default false,

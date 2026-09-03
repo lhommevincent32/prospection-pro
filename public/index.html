@@ -67,6 +67,11 @@ h1{font-size:19px;margin:0;letter-spacing:-.01em}
 .offre{font:500 11px/1 "IBM Plex Mono",monospace;letter-spacing:.04em;text-transform:uppercase;
   padding:5px 7px;border-radius:4px;background:var(--trait2);color:var(--encre2)}
 .offre.colis,.offre.flyers{background:var(--vert-clair);color:var(--vert)}
+.ident{margin:6px 0 0;font:500 12px "IBM Plex Mono",monospace;color:var(--gris);letter-spacing:.02em}
+.actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:11px}
+.act{display:inline-flex;align-items:center;min-height:40px;text-decoration:none;font-size:13.5px;
+  padding:0 13px;border:1px solid var(--trait);border-radius:7px;color:var(--encre2);background:var(--fond)}
+.act.tel{border-color:var(--vert);color:var(--vert);font-weight:600}
 
 /* --- suivi : cibles tactiles larges, c'est utilisé debout dans la rue --- */
 .suivi{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;padding-top:12px;
@@ -207,6 +212,25 @@ function dessinerOnglets(tous) {
     + Object.entries(STATUTS).map(([v, l]) => bouton(v, l, n[v] ?? 0)).join('');
 }
 
+function identifiant(p) {
+  if (p.siret) return 'SIRET ' + p.siret.replace(/(\d{3})(\d{3})(\d{3})(\d{5})/, '$1 $2 $3 $4');
+  if (p.siren) return 'SIREN ' + p.siren.replace(/(\d{3})(\d{3})(\d{3})/, '$1 $2 $3');
+  return null;
+}
+
+// Aucune source publique ne donne le téléphone, et OpenStreetMap ne couvre que 4 %
+// des créations récentes. On prépare donc la recherche plutôt que de la deviner :
+// un appui, et le navigateur du téléphone fait le reste.
+function actions(p) {
+  const b = [];
+  if (p.telephone) b.push(`<a class="act tel" href="tel:${ech(p.telephone.replace(/\s/g, ''))}">Appeler</a>`);
+  if (p.site) b.push(`<a class="act" href="${ech(p.site)}" target="_blank" rel="noopener">Site</a>`);
+  b.push(`<a class="act" href="https://www.google.com/search?q=${encodeURIComponent(`${p.nom} ${p.commune ?? ''} téléphone`)}" target="_blank" rel="noopener">Chercher</a>`);
+  const lieu = [p.adresse, p.code_postal, p.commune].filter(Boolean).join(' ');
+  if (lieu) b.push(`<a class="act" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(lieu)}" target="_blank" rel="noopener">Itinéraire</a>`);
+  return `<div class="actions">${b.join('')}</div>`;
+}
+
 function palier(score) {
   return score >= 60 ? ['fort', 'Prioritaire'] : score >= 35 ? ['moyen', 'À regarder'] : ['faible', 'Secondaire'];
 }
@@ -231,8 +255,10 @@ function fiche(p) {
     </div>
     <p class="meta">${meta}</p>
     ${p.dirigeants ? `<p class="meta">Dirigeant : <b>${ech(p.dirigeants)}</b></p>` : ''}
+    ${identifiant(p) ? `<p class="ident">${identifiant(p)}</p>` : ''}
     ${(p.raisons ?? []).length ? `<ul class="raisons">${p.raisons.map((r) => `<li>${ech(r)}</li>`).join('')}</ul>` : ''}
     <div class="offres">${(p.offres ?? []).map((o) => `<span class="offre ${ech(o)}">${ech(OFFRES[o] ?? o)}</span>`).join('')}</div>
+    ${p.genre === 'entreprise' ? actions(p) : ''}
     <div class="suivi">
       <select class="statut" aria-label="Statut">${options}</select>
       <input class="notes" value="${ech(p.notes)}" placeholder="Notes d'appel…" aria-label="Notes">
