@@ -4,6 +4,7 @@ import { collecterPresse } from './sources/presse.js';
 import { enrichirDepuisSirene } from './enrichir.js';
 import { enregistrerLot, journaliser, statistiques, purger, OU } from './store/index.js';
 import { INSEE_API_KEY, COMMUNES } from './config.js';
+import { inspecterUrl } from './store/supabase.js';
 
 const jour = (d) => d.toISOString().slice(0, 10);
 
@@ -51,6 +52,13 @@ function verifierConfiguration() {
   if (!distant && (process.env.SUPABASE_URL || process.env.SUPABASE_SERVICE_KEY)) {
     console.log('\n  Une seule des deux valeurs Supabase est renseignée : il en faut deux.');
     console.log('  Les fiches seront écrites en local et perdues à la fin de l\'exécution.');
+  }
+  if (distant) {
+    // L'URL du projet n'est pas un secret : elle vit aussi dans la page web publique.
+    // L'afficher permet de repérer une faute de recopie en un coup d'œil.
+    const u = inspecterUrl();
+    console.log(`  adresse Supabase        ${u.brut}`);
+    for (const a of u.anomalies) console.log(`     /!\\  ${a}`);
   }
   console.log('');
 }

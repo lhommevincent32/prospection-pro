@@ -10,6 +10,36 @@
 const URL_BASE = process.env.SUPABASE_URL ?? '';
 const CLE = process.env.SUPABASE_SERVICE_KEY ?? '';
 
+/** Décrit l'URL configurée : sert au diagnostic, et ne révèle rien de secret. */
+export function inspecterUrl() {
+  const brut = process.env.SUPABASE_URL ?? '';
+  const anomalies = [];
+  if (!brut) return { brut, hote: null, anomalies: ['SUPABASE_URL est vide'] };
+  if (brut !== brut.trim()) anomalies.push('espace ou saut de ligne au début ou à la fin');
+  if (!/^https?:\/\//.test(brut.trim())) anomalies.push('il manque « https:// » au début');
+
+  let hote = null;
+  try {
+    const u = new URL(brut.trim());
+    hote = u.host;
+    if (u.pathname !== '/' && u.pathname !== '') {
+      anomalies.push(`l'adresse contient un chemin (« ${u.pathname} ») : il faut seulement la racine`);
+    }
+    if (u.host.includes('supabase.com')) {
+      anomalies.push("c'est l'adresse du tableau de bord, pas celle du projet : il faut https://<référence>.supabase.co");
+    } else if (!/\.supabase\.(co|in)$/.test(u.host)) {
+      anomalies.push(`le nom d'hôte « ${u.host} » ne ressemble pas à une adresse Supabase`);
+    }
+  } catch {
+    anomalies.push("l'adresse n'est pas une URL valide");
+  }
+  return { brut: brut.trim(), hote, anomalies };
+}
+
+function hoteLisible() {
+  return inspecterUrl().hote ?? process.env.SUPABASE_URL ?? '(vide)';
+}
+
 function entetes(extra = {}) {
   return { apikey: CLE, Authorization: `Bearer ${CLE}`, 'Content-Type': 'application/json', ...extra };
 }
@@ -32,7 +62,20 @@ async function rest(chemin, options = {}) {
   try {
     rep = await fetch(`${URL_BASE}/rest/v1/${chemin}`, { ...options, headers: entetes(options.headers) });
   } catch (e) {
-    throw new Error(`Supabase injoignable (${e.message}) — vérifier SUPABASE_URL`);
+    // Node range la vraie cause réseau dans `cause` : sans elle, « fetch failed »
+    // ne distingue pas un nom d'hôte inexistant d'un projet en veille.
+    const code = e.cause?.code ?? e.cause?.message ?? e.message;
+    const explication = {
+      ENOTFOUND: "ce nom d'hôte n'existe pas — l'URL est mal recopiée",
+      EAI_AGAIN: "nom d'hôte irrésolu — l'URL est probablement mal recopiée",
+      ECONNREFUSED: 'connexion refusée — le projet Supabase est peut-être en veille',
+      CERT_HAS_EXPIRED: 'certificat expiré',
+      ERR_INVALID_URL: "l'URL est mal formée — il manque https:// ou il y a un espace",
+    }[code];
+    throw new Error(
+      `Supabase injoignable sur « ${hoteLisible()} » [${code}]`
+      + (explication ? ` : ${explication}` : '')
+    );
   }
   if (!rep.ok) {
     const corps = (await rep.text()).slice(0, 300);
