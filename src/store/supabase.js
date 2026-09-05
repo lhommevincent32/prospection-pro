@@ -149,10 +149,18 @@ export async function nouveautesDepuis(iso) {
   return rest(`prospects?select=*&vu_le=gte.${iso}&score=gt.0&order=score.desc,date_fait.desc`);
 }
 
-export async function lister({ statut, genre, recherche } = {}) {
-  const p = new URLSearchParams({ select: '*', 'score': 'gt.0', order: 'score.desc,date_fait.desc', limit: '400' });
+export async function lister({ statut, genre, evenement, offre, periode, recherche, tri } = {}) {
+  const ordre = tri === 'recent' ? 'date_fait.desc'
+    : tri === 'ancien' ? 'date_fait.asc'
+    : 'score.desc,date_fait.desc';
+  const p = new URLSearchParams({ select: '*', score: 'gt.0', order: ordre, limit: '400' });
   if (statut) p.set('statut', `eq.${statut}`);
   if (genre) p.set('genre', `eq.${genre}`);
+  if (evenement) p.set('evenement', `eq.${evenement}`);
+  if (offre) p.set('offres', `cs.{${offre}}`);
+  if (periode) {
+    p.set('date_fait', `gte.${new Date(Date.now() - Number(periode) * 86400000).toISOString().slice(0, 10)}`);
+  }
   if (recherche) p.set('or', `(nom.ilike.*${recherche}*,commune.ilike.*${recherche}*,activite.ilike.*${recherche}*)`);
   return rest(`prospects?${p}`);
 }

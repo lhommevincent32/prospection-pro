@@ -110,6 +110,30 @@ défaut et n'écrit qu'avec `--appliquer` ; le workflow **Fusionner les doublons
 la même chose sur Supabase. Statuts et notes sont conservés, en gardant le statut le
 plus avancé des fiches rapprochées.
 
+## Filtrer et trier
+
+Le tableau de bord (mobile comme local) filtre sur :
+
+- le **statut** de suivi, en pastilles ;
+- le **type** : entreprises, événements, ou les deux ;
+- la **nature du signal** : reprise de fonds, déménagement, nouveau dirigeant, création ;
+- l'**offre** concernée : colis, courrier, flyers, téléphonie, Swile ;
+- l'**ancienneté** : moins d'un mois, 3 mois, 6 mois, un an.
+
+Et trie par potentiel, par date la plus récente ou la plus ancienne.
+
+Les compteurs des pastilles de statut tiennent compte des autres filtres : en filtrant
+sur les reprises de fonds, « À appeler » affiche combien de reprises restent à appeler,
+pas le total toutes catégories confondues.
+
+La date utilisée est celle de l'événement : date de création pour Sirene, date
+d'**immatriculation** pour le BODACC — et non sa date de parution, qui peut suivre
+l'immatriculation de plusieurs semaines et ferait paraître une fiche plus fraîche
+qu'elle ne l'est.
+
+`npm start` sert aussi la page mobile sur `/mobile`, avec les identifiants du `.env`,
+pour pouvoir la tester avant publication.
+
 ## Le score
 
 De 0 à 100, il ne sert qu'à donner un ordre de lecture. Il combine le type d'activité

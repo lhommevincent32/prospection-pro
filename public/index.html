@@ -45,6 +45,20 @@ h1{font-size:19px;margin:0;letter-spacing:-.01em}
 .rech{width:100%;margin-top:9px;padding:10px 12px;border:1px solid var(--trait);border-radius:8px;
   background:var(--surface);color:var(--encre);font:inherit;font-size:15px}
 
+/* --- réglages : repliés par défaut, cinq listes déroulantes mangeraient l'écran --- */
+.bascule{margin-top:8px;width:100%;min-height:38px;font:inherit;font-size:13.5px;
+  padding:8px 12px;border:1px solid var(--trait);border-radius:7px;text-align:left;
+  background:var(--surface);color:var(--gris);cursor:pointer}
+.bascule[aria-expanded=true]{border-color:var(--encre);color:var(--encre)}
+.bascule span{display:inline-block;margin-left:7px;padding:1px 7px;border-radius:999px;
+  background:var(--vert);color:var(--fond);font:600 11.5px "IBM Plex Mono",monospace}
+.reglages{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.reglages select,.reglages button{flex:1 1 auto;min-width:0;font:inherit;font-size:13.5px;
+  padding:8px 10px;min-height:38px;border:1px solid var(--trait);border-radius:7px;
+  background:var(--surface);color:var(--encre)}
+.reglages select.actif{border-color:var(--vert);color:var(--vert);font-weight:600}
+.reglages button{flex:0 0 auto;color:var(--brique);cursor:pointer}
+
 /* --- fiches --- */
 .fiche{background:var(--surface);border:1px solid var(--trait);border-left:4px solid var(--trait);
   border-radius:8px;padding:14px;margin-top:10px}
@@ -121,6 +135,44 @@ h1{font-size:19px;margin:0;letter-spacing:-.01em}
     <p class="sous" id="resume">Chargement…</p>
     <div class="onglets" id="onglets" role="group" aria-label="Filtrer par statut"></div>
     <input id="recherche" class="rech" type="search" placeholder="Nom, commune, activité…" aria-label="Rechercher">
+    <button id="bascule" class="bascule" type="button" aria-expanded="false" aria-controls="reglages">
+      Filtres et tri<span id="compteur" hidden></span>
+    </button>
+    <div class="reglages" id="reglages" hidden>
+      <select id="genre" aria-label="Type de prospect">
+        <option value="">Entreprises et événements</option>
+        <option value="entreprise">Entreprises</option>
+        <option value="evenement">Événements</option>
+      </select>
+      <select id="evenement" aria-label="Nature de l'événement">
+        <option value="">Tous les signaux</option>
+        <option value="vente">Reprises de fonds</option>
+        <option value="transfert">Déménagements</option>
+        <option value="dirigeant">Nouveaux dirigeants</option>
+        <option value="creation">Créations</option>
+      </select>
+      <select id="offre" aria-label="Offre concernée">
+        <option value="">Toutes les offres</option>
+        <option value="colis">Colis</option>
+        <option value="courrier">Courrier</option>
+        <option value="flyers">Flyers</option>
+        <option value="telecom">Téléphonie</option>
+        <option value="swile">Swile</option>
+      </select>
+      <select id="periode" aria-label="Ancienneté de la création">
+        <option value="">Toutes les dates</option>
+        <option value="30">Moins d'un mois</option>
+        <option value="90">Moins de 3 mois</option>
+        <option value="180">Moins de 6 mois</option>
+        <option value="365">Moins d'un an</option>
+      </select>
+      <select id="tri" aria-label="Ordre d'affichage">
+        <option value="score">Par potentiel</option>
+        <option value="recent">Les plus récentes</option>
+        <option value="ancien">Les plus anciennes</option>
+      </select>
+      <button id="raz" type="button" hidden>Tout effacer</button>
+    </div>
   </div>
   <div id="liste"></div>
 </div>
@@ -132,6 +184,19 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 // accès à rien sans connexion, les règles d'accès de Supabase s'en chargent.
 const SUPABASE_URL = '__SUPABASE_URL__';
 const SUPABASE_ANON_KEY = '__SUPABASE_ANON_KEY__';
+
+// Si le déploiement n'a pas rempli les marqueurs, createClient lève une exception et
+// la page reste blanche sans rien expliquer. Mieux vaut le dire.
+if (!SUPABASE_URL || SUPABASE_URL.startsWith('__') || !SUPABASE_ANON_KEY || SUPABASE_ANON_KEY.startsWith('__')) {
+  document.body.innerHTML = `<div class="porte">
+    <h1>Configuration incomplète</h1>
+    <p>Les identifiants Supabase n'ont pas été injectés dans cette page. Vérifie que les
+    variables <b>SUPABASE_URL</b> et <b>SUPABASE_ANON_KEY</b> sont renseignées dans
+    Settings &gt; Secrets and variables &gt; Actions &gt; <b>Variables</b>, puis relance
+    le workflow « Publier le tableau de bord ».</p>
+  </div>`;
+  throw new Error('Identifiants Supabase absents de la page publiée.');
+}
 
 const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -149,7 +214,8 @@ const $ = (s) => document.querySelector(s);
 const ech = (v) => String(v ?? '').replace(/[&<>"']/g, (c) =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-let filtre = { statut: '', recherche: '' };
+const FILTRE_VIDE = { statut: '', recherche: '', genre: '', evenement: '', offre: '', periode: '', tri: 'score' };
+let filtre = { ...FILTRE_VIDE };
 
 // ---------------------------------------------------------------- connexion
 $('#formConnexion').addEventListener('submit', async (e) => {
@@ -176,21 +242,45 @@ function afficher(session) {
 }
 
 // ---------------------------------------------------------------- données
-async function charger() {
-  let req = sb.from('prospects').select('*').gt('score', 0)
-    .order('score', { ascending: false })
-    .order('date_fait', { ascending: false })
-    .limit(300);
 
-  if (filtre.statut) req = req.eq('statut', filtre.statut);
+/**
+ * Applique tous les filtres sauf le statut.
+ *
+ * Le statut est traité à part parce que les pastilles du haut doivent en compter les
+ * fiches : si on filtre sur les reprises de fonds, « À appeler » doit afficher combien
+ * de reprises restent à appeler, pas le total toutes catégories confondues.
+ */
+function appliquerFiltres(req) {
+  req = req.gt('score', 0);
+  if (filtre.genre) req = req.eq('genre', filtre.genre);
+  if (filtre.evenement) req = req.eq('evenement', filtre.evenement);
+  if (filtre.offre) req = req.contains('offres', [filtre.offre]);
+  if (filtre.periode) {
+    const depuis = new Date(Date.now() - Number(filtre.periode) * 86400000);
+    req = req.gte('date_fait', depuis.toISOString().slice(0, 10));
+  }
   if (filtre.recherche) {
     const q = `*${filtre.recherche}*`;
     req = req.or(`nom.ilike.${q},commune.ilike.${q},activite.ilike.${q}`);
   }
+  return req;
+}
+
+/** Le tri par date porte sur date_fait : création pour Sirene, immatriculation au BODACC. */
+function appliquerTri(req) {
+  if (filtre.tri === 'recent') return req.order('date_fait', { ascending: false, nullsFirst: false });
+  if (filtre.tri === 'ancien') return req.order('date_fait', { ascending: true, nullsFirst: false });
+  return req.order('score', { ascending: false }).order('date_fait', { ascending: false });
+}
+
+async function charger() {
+  let req = appliquerFiltres(sb.from('prospects').select('*')).limit(300);
+  if (filtre.statut) req = req.eq('statut', filtre.statut);
+  req = appliquerTri(req);
 
   const [{ data, error }, { data: tous }] = await Promise.all([
     req,
-    sb.from('prospects').select('statut').gt('score', 0),
+    appliquerFiltres(sb.from('prospects').select('statut')),
   ]);
 
   if (error) {
@@ -198,7 +288,8 @@ async function charger() {
     return;
   }
   dessinerOnglets(tous ?? []);
-  $('#resume').textContent = `${(tous ?? []).length} fiches · ${data.length} affichées`;
+  refleterFiltres();
+  $('#resume').textContent = `${(tous ?? []).length} fiches retenues · ${data.length} affichées`;
   $('#liste').innerHTML = data.length
     ? data.map(fiche).join('')
     : '<p class="vide">Aucune fiche ne correspond.</p>';
@@ -275,6 +366,45 @@ $('#onglets').addEventListener('click', (e) => {
   filtre.statut = b.dataset.statut;
   charger();
 });
+
+for (const champ of ['genre', 'evenement', 'offre', 'periode', 'tri']) {
+  $(`#${champ}`).addEventListener('change', (e) => {
+    filtre[champ] = e.target.value;
+    charger();
+  });
+}
+
+$('#raz').addEventListener('click', () => {
+  filtre = { ...FILTRE_VIDE };
+  $('#recherche').value = '';
+  for (const champ of ['genre', 'evenement', 'offre', 'periode', 'tri']) {
+    $(`#${champ}`).value = FILTRE_VIDE[champ];
+  }
+  charger();
+});
+
+$('#bascule').addEventListener('click', () => {
+  const ouvert = $('#reglages').hidden;
+  $('#reglages').hidden = !ouvert;
+  $('#bascule').setAttribute('aria-expanded', String(ouvert));
+});
+
+/**
+ * Souligne les réglages actifs, compte ceux qui le sont sur le bouton replié, et
+ * n'offre « Tout effacer » que s'il y a quelque chose à effacer.
+ */
+function refleterFiltres() {
+  let actifs = 0;
+  for (const champ of ['genre', 'evenement', 'offre', 'periode', 'tri']) {
+    const el = $(`#${champ}`);
+    const actif = filtre[champ] !== FILTRE_VIDE[champ];
+    el.classList.toggle('actif', actif);
+    if (actif) actifs++;
+  }
+  $('#compteur').hidden = actifs === 0;
+  $('#compteur').textContent = actifs;
+  $('#raz').hidden = actifs === 0 && !filtre.recherche && !filtre.statut;
+}
 
 let minuteur;
 $('#recherche').addEventListener('input', (e) => {

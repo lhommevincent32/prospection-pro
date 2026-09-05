@@ -35,6 +35,22 @@ function adresseDe(personnes) {
 }
 
 /**
+ * Date de l'événement.
+ *
+ * Pour une création, la date de parution n'est pas la bonne : l'annonce peut sortir
+ * plusieurs semaines après l'immatriculation, et une fiche paraîtrait plus fraîche
+ * qu'elle ne l'est. Le BODACC publie la vraie date dans le champ `acte`, on la préfère.
+ * Pour une cession ou une modification, la parution est bien la date de l'événement.
+ */
+function dateDe(annonce, evenement) {
+  if (evenement === 'creation') {
+    const immat = jsonSur(annonce.acte)?.dateImmatriculation;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(immat ?? '')) return immat;
+  }
+  return annonce.dateparution;
+}
+
+/**
  * Une modification peut être un transfert de siège, un changement de dirigeant, ou
  * un détail administratif sans intérêt. On lit le texte de l'annonce pour trancher :
  * seuls les deux premiers cas valent un appel.
@@ -121,7 +137,7 @@ export async function collecterBodacc({ depuis }) {
         siren,
         dirigeants: dirigeantsDe(a.listepersonnes),
         capital,
-        dateFait: a.dateparution,
+        dateFait: dateDe(a, evenement),
         url: a.url_complete,
         score, offres, raisons,
         brut: { siren: siren ?? brutSiren, formeJuridique: personne.formeJuridique, tribunal: a.tribunal },

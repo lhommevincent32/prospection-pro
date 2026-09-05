@@ -98,16 +98,27 @@ export async function nouveautesDepuis(iso) {
     .all(iso).map(sortie);
 }
 
-export async function lister({ statut, genre, recherche } = {}) {
+export async function lister({ statut, genre, evenement, offre, periode, recherche, tri } = {}) {
   const ou = ['score > 0'];
   const args = [];
   if (statut) { ou.push('statut = ?'); args.push(statut); }
   if (genre) { ou.push('genre = ?'); args.push(genre); }
+  if (evenement) { ou.push('evenement = ?'); args.push(evenement); }
+  // Les offres sont une liste séparée par des virgules : on encadre pour ne pas
+  // faire correspondre « colis » à l'intérieur d'un autre mot.
+  if (offre) { ou.push("(',' || offres || ',') LIKE ?"); args.push(`%,${offre},%`); }
+  if (periode) {
+    ou.push('date_fait >= ?');
+    args.push(new Date(Date.now() - Number(periode) * 86400000).toISOString().slice(0, 10));
+  }
   if (recherche) {
     ou.push('(nom LIKE ? OR commune LIKE ? OR activite LIKE ?)');
     const q = `%${recherche}%`; args.push(q, q, q);
   }
-  return db.prepare(`SELECT * FROM prospects WHERE ${ou.join(' AND ')} ORDER BY score DESC, date_fait DESC LIMIT 400`)
+  const ordre = tri === 'recent' ? 'date_fait DESC'
+    : tri === 'ancien' ? 'date_fait ASC'
+    : 'score DESC, date_fait DESC';
+  return db.prepare(`SELECT * FROM prospects WHERE ${ou.join(' AND ')} ORDER BY ${ordre} LIMIT 400`)
     .all(...args).map(sortie);
 }
 
